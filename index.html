@@ -926,8 +926,8 @@ function renderLetter(){
   else for (const grp of [{lv:[1],head:ACTION[1],act:STATUS[1]}, {lv:[3],head:ACTION[3],act:STATUS[3]}, {lv:[4,5],head:ACTION[4]}]){
     const g=rows.filter(x=>grp.lv.includes(x.r.lvl)); if(!g.length) continue;
     body+=`<div class="grp">• الطلبة المطلوب ${grp.head}:</div>
-      <table><tr><th>ت</th><th>اسم الطالب</th><th>ساعات الغياب</th><th>نسبة الغياب</th><th>ما يعادله</th><th>الإجراء المطلوب</th></tr>`+
-      g.map((x,k)=>`<tr><td>${k+1}</td><td class="nm">${esc(x.s.name)}</td><td>${fmt(x.r.a)}</td><td>${fmt(x.r.p)}%</td><td>${weeksTxt(x.r.a)}</td><td>${grp.act||STATUS[x.r.lvl]}</td></tr>`).join("")+`</table>`;
+      <table><tr><th>ت</th><th>اسم الطالب</th><th>ساعات الغياب</th><th>نسبة الغياب</th><th>ما يعادله</th><th>العذر</th><th>الإجراء المطلوب</th></tr>`+
+      g.map((x,k)=>`<tr><td>${k+1}</td><td class="nm">${esc(x.s.name)}</td><td>${fmt(x.r.a)}</td><td>${fmt(x.r.p)}%</td><td>${weeksTxt(x.r.a)}</td><td>${x.r.exc?"لديه عذر":"ليس لديه عذر"}</td><td>${grp.act||STATUS[x.r.lvl]}</td></tr>`).join("")+`</table>`;
   }
   // 7% = one week in the guide, but a 15-week term makes a week 6.7%: say so, so 13.3% for two weeks reads right
   if (rows.length) body+=`<div class="key-note" contenteditable="true" style="font-size:13px;margin-top:8px">ملاحظة: حسب دليل اعتماد عملية بولونيا يعادل الأسبوع الدراسي الواحد 7% من الساعات المقررة، والأسبوعان 14%، والثلاثة أسابيع 21%، لذلك قد تظهر النسبة الفعلية أقل قليلاً من هذه الأرقام.</div>`;
@@ -1173,7 +1173,8 @@ async function makePdf(){
 /* minimal .docx writer: builds the Word XML from the letter as shown (including any edits) */
 function makeDocx(){
   const L=document.getElementById("letter");
-  const x=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  // a zero-width joiner inside «محمد» stops Word drawing it as the one-glyph ligature that reads like «مجد»
+  const x=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/محمد/g,"مح‍مد");
   // Latin-digit runs such as dates (11/10/2026) go in left-to-right runs, otherwise Word shows them reversed
   const run1=(t,o,rtl)=>`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${o.b?"<w:b/><w:bCs/>":""}${o.u?'<w:u w:val="single"/>':""}<w:sz w:val="${o.sz||28}"/><w:szCs w:val="${o.sz||28}"/>${rtl?"<w:rtl/>":""}</w:rPr><w:t xml:space="preserve">${x(t)}</w:t></w:r>`;
   // an RLM splits the text first, so "20‏/‏10‏/‏2026" stays right to left in Word as it is on screen
@@ -1210,10 +1211,15 @@ function makeDocx(){
           }
           return cell(sgXml,cw);
         }).join("");
-        body+=para("",{after:300})+table(`<w:tr>${cell(para(txt(att)),cw)}${sgCells}</w:tr>`,noBorders,Array(sgs.length+1).fill(cw));
+        // cantSplit keeps each signature with its name and date on one page
+        body+=para("",{after:300})+table(`<w:tr><w:trPr><w:cantSplit/></w:trPr>${cell(para(txt(att)),cw)}${sgCells}</w:tr>`,noBorders,Array(sgs.length+1).fill(cw));
       } else if (e.tagName==="TABLE"){
         // column widths follow the on-screen table, scaled to the 9638-twip text width of A4 with 2cm margins
-        const px=[...e.rows[0].cells].map(c=>c.offsetWidth||1), sum=px.reduce((a,b)=>a+b,0), tw=px.map(p=>Math.round(9638*p/sum));
+        const px=[...e.rows[0].cells].map(c=>c.offsetWidth||1), sum=px.reduce((a,b)=>a+b,0);
+        let tw=px.map(p=>Math.round(9638*p/sum));
+        // the name column gets at least 28% of the width (the phone screen squeezes it), the rest share what is left
+        const ni=[...(e.rows[1]||e.rows[0]).cells].findIndex(c=>c.classList.contains("nm")), minN=2700;
+        if (ni>=0 && tw[ni]<minN){ const rest=9638-tw[ni], k=(9638-minN)/rest; tw=tw.map((v,i)=>i===ni?minN:Math.round(v*k)); }
         const rows=[...e.rows].map((tr,ri)=>`<w:tr>${ri?"":'<w:trPr><w:tblHeader/></w:trPr>'}`+[...tr.cells].map((td,ci)=>cell(para(txt(td),{sz:22,b:ri===0,jc:td.classList.contains("nm")?null:"center",after:0}),tw[ci]||1100,ri===0)).join("")+`</w:tr>`).join("");
         body+=table(rows,allBorders,tw);
       } else if (e.tagName==="DIV" && !e.className && e.children.length){

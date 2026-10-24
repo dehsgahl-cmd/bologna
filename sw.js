@@ -1,6 +1,6 @@
 ﻿// Offline support: keeps a copy of the app on the device. The page is fetched fresh when online
 // (so updates arrive), and the saved copy is used when there is no internet.
-const CACHE = "bologna-202610242302";
+const CACHE = "bologna-202610242313";
 const INBOX = "bologna-inbox";   // a file shared into the app from WhatsApp etc. waits here for the page
 const FILES = ["./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png"];
