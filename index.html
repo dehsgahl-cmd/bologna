@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>غيابات الطلبة – بولونيا</title>
+<!-- installable web app: iPhone/iPad "Add to Home Screen", Android/desktop "Install app" (used when served from a link) -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f5f8b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="غيابات بولونيا">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<script>
+// very old phone browsers (WebView before 2017) cannot run this page: say how to fix it instead of showing a blank screen
+try { new Function("return async function(){ const [a,...b]=[1]; return {...{a}}; }"); }
+catch (e) {
+  document.addEventListener("DOMContentLoaded", function(){
+    document.body.innerHTML = '<div dir="rtl" style="font-family:Tahoma;padding:24px;line-height:2;font-size:17px">' +
+      '<b>متصفح الموبايل الداخلي قديم ولا يشغّل البرنامج.</b><br>' +
+      'افتح متجر Google Play وابحث عن <b>Android System WebView</b> واضغط «تحديث»، وحدّث كذلك <b>Google Chrome</b>، ثم أعد فتح التطبيق.</div>';
+  });
+}
+</script>
+<style>
+:root{
+  --bg:#f4f6f9; --card:#fff; --ink:#1d2733; --muted:#66727f; --line:#dfe4ea;
+  --pri:#1f5f8b; --pri2:#e8f1f8;
+  --s1:#fff8d6; --s2:#ffe7c2; --s3:#ffd0b0; --s4:#ffc9c9; --s5:#e8dcff;
+  --t1:#8a6d00; --t2:#a35a00; --t3:#b23b00; --t4:#b00020; --t5:#5b3aa6;
+}
+*{box-sizing:border-box}
+/* fonts already on the device only (Windows, Android, iPhone): the page makes no outside connections */
+body{margin:0;font-family:"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+header{background:var(--pri);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+header h1{margin:0;font-size:20px}
+header .sub{font-size:13px;opacity:.85}
+nav{display:flex;gap:4px;flex-wrap:wrap;padding:10px 20px 0;background:var(--bg)}
+nav button{border:1px solid var(--line);border-bottom:none;background:#e9edf2;padding:9px 16px;border-radius:8px 8px 0 0;cursor:pointer;font:inherit;color:var(--ink)}
+nav button.on{background:var(--card);font-weight:700;color:var(--pri)}
+main{padding:0 20px 30px}
+.tab{display:none;background:var(--card);border:1px solid var(--line);border-radius:0 0 10px 10px;padding:18px}
+.tab.on{display:block}
+h2{font-size:17px;margin:0 0 12px;color:var(--pri)}
+h3{font-size:15px;margin:22px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
+input,select,textarea{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+textarea{min-height:150px;resize:vertical}
+.btn{font:inherit;border:none;background:var(--pri);color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer}
+.btn.sec{background:#e9edf2;color:var(--ink);border:1px solid var(--line)}
+.btn.red{background:#b00020}
+.btn.sm{padding:4px 10px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin:10px 0}
+.note{background:var(--pri2);border-right:4px solid var(--pri);padding:10px 12px;border-radius:6px;font-size:13.5px;line-height:1.8;margin:10px 0}
+.warn{background:#fff4e5;border-right-color:#d98200}
+.key{background:var(--pri2);padding:14px;border-radius:8px;margin-bottom:14px}
+.total{font-size:20px;font-weight:700;color:var(--pri)}
+.scroll{overflow:auto;max-width:100%;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:center;white-space:nowrap}
+th{background:#f0f3f7;font-weight:600;font-size:13px}
+td.name{text-align:right;min-width:190px;position:sticky;right:0;background:inherit;z-index:1}
+th.name{position:sticky;right:0;z-index:2}
+tr{background:#fff}
+.sched td{padding:4px}
+.sched select,.sched input{padding:4px 6px}
+.sched select{min-width:76px}
+td.c{cursor:pointer;user-select:none;min-width:64px;font-weight:700;font-size:14px;line-height:1.3;padding:4px}
+td.c .cd{display:block;font-size:11px;font-weight:400;color:#9aa5b1}
+td.c.u .cd,td.c.e .cd{color:inherit;opacity:.75}
+td.c.first,th.lec{border-right:2px solid #9fb3c8}
+th.hr{font-size:12px;font-weight:400}
+td.c.u{background:#ffd9d9;color:#b00020} td.c.e{background:#dbeafe;color:#1d4ed8}
+td.c:hover{outline:2px solid var(--pri);outline-offset:-2px}
+.th-s{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+td.g{cursor:pointer;min-width:36px;font-size:12.5px;font-weight:700;padding:4px}
+td.g.u{background:#ffd9d9;color:#b00020} td.g.e{background:#dbeafe;color:#1d4ed8} td.g.m{background:#f3e0ff;color:#6b21a8}
+th.cur,td.cur{outline:2px solid var(--pri);outline-offset:-2px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:8px 0}
+.legend b{display:inline-block;width:24px;text-align:center;border-radius:4px;margin-left:4px}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12.5px;font-weight:700}
+.b0{background:#eef7ee;color:#2e7d32}.b1{background:var(--s1);color:var(--t1)}.b2{background:var(--s2);color:var(--t2)}
+.b3{background:var(--s3);color:var(--t3)}.b4{background:var(--s4);color:var(--t4)}.b5{background:var(--s5);color:var(--t5)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.stat{flex:1;min-width:120px;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center}
+.stat .n{font-size:24px;font-weight:700}
+.stat .l{font-size:12.5px;color:var(--muted)}
+.del{color:#b00020;cursor:pointer;font-size:12px;margin-right:6px}
+td.dates{white-space:normal;text-align:right;font-size:12.5px;max-width:260px}
+/* letter */
+#letter{background:#fff;border:1px solid var(--line);padding:40px 50px;margin-top:14px;font-family:"Traditional Arabic","Simplified Arabic","Times New Roman","Noto Naskh Arabic","Geeza Pro",serif;font-size:17px;line-height:2;max-width:860px;margin-left:auto;margin-right:auto;overflow-x:auto}
+#letter .lh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:18px;font-size:15.5px;line-height:1.7}
+#letter .to{font-weight:700;margin:12px 0}
+#letter .subj{text-align:center;font-weight:700;text-decoration:underline;margin:10px 0}
+#letter table th,#letter table td{border:1px solid #000;font-family:inherit;font-size:14.5px;padding:3px 6px;line-height:1.6}
+#letter table th{background:#eee}
+#letter table{width:100%;table-layout:auto}
+#letter th,#letter td{white-space:normal;word-break:normal}   /* wrap, so every column stays on the page */
+#letter td.nm{text-align:right}
+#letter td.dates{font-size:13px;width:24%;max-width:none;text-align:right}
+#letter .key-note{font-size:12.5px;margin-top:2px}
+#letter .sig{margin-top:40px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+#letter .sig>div{min-width:180px}
+#letter .sig .att{text-align:right}
+#letter .sig .sg{text-align:center}
+#letter .sig img{display:block;width:170px;max-width:100%;max-height:80px;height:80px;object-fit:contain;margin:2px auto}
+#letter .sig .sp{height:84px}
+#letter .sig .dt{font-family:Tahoma,Arial,sans-serif;font-size:13px}
+.sigbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sigbox img{max-height:60px;max-width:180px;border:1px dashed var(--line);border-radius:6px;background:#fff;padding:4px}
+.secbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#dfeaf3;padding:8px 20px;border-bottom:1px solid #c5d6e4}
+.headbanner{background:#fff3e0;border-bottom:2px solid #b26a00;color:#6d4100;padding:8px 20px;font-size:13.5px;line-height:1.8}
+.secbar label{margin:0;font-weight:700;color:var(--pri);font-size:14px}
+.secbar select{width:auto;min-width:240px;flex:1 1 240px;max-width:460px;font-weight:600}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:6px 10px 18px}
+.modal{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:55;padding:16px}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:12px;max-width:440px;width:100%;padding:22px;line-height:1.9;text-align:center}
+#about{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#about.on{display:flex}
+#about .box{background:#fff;border-radius:12px;max-width:440px;width:100%;padding:22px;line-height:1.9;text-align:center}
+#about h2{margin-bottom:6px}
+#about .own{font-weight:700;color:var(--pri);font-size:16px;margin:12px 0}
+#busy{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:60;font-weight:700;color:var(--pri)}
+#busy.on{display:flex}
+#letter .grp{font-weight:700;margin:14px 0 4px}
+[contenteditable]:focus{outline:1px dashed var(--pri)}
+@media print{
+  body{background:#fff}
+  header,nav,footer,.noprint,.tab:not(#t-letter){display:none!important}
+  main{padding:0}
+  .tab{border:none;padding:0;display:block!important}
+  #letter{border:none;padding:0;max-width:none;overflow:visible;font-size:16px}
+  #letter table{table-layout:auto;width:100%}
+  #letter th,#letter td{white-space:normal}
+}
+@media (max-width:600px){
+  body{font-size:14px}
+  header{padding:10px 12px}
+  header h1{font-size:17px}
+  .secbar{padding:8px 10px}
+  .secbar select{min-width:0;flex:1 1 100%;max-width:none}
+  nav{flex-wrap:nowrap;overflow-x:auto;padding:8px 8px 0;-webkit-overflow-scrolling:touch}
+  nav button{flex:0 0 auto;padding:8px 12px;font-size:13px}
+  main{padding:0 8px 20px}
+  .tab{padding:12px}
+  .grid{grid-template-columns:1fr 1fr;gap:8px}
+  .row>div{flex:1 1 140px;width:auto!important}
+  td.name{min-width:120px;max-width:150px;white-space:normal;font-size:13px}
+  th,td{padding:4px 5px}
+  td.c{min-width:52px}
+  .stat{min-width:90px;padding:6px}.stat .n{font-size:20px}
+  /* phone-screen layout of the letter; the PDF copy (.pdfsrc) keeps the full-page layout, because it is
+     measured here but drawn at page width — mixing the two cut off the bottom (the names) */
+  #letter:not(.pdfsrc){padding:16px;font-size:15px}
+  #letter:not(.pdfsrc) table th,#letter:not(.pdfsrc) table td{font-size:11.5px;padding:2px 3px}
+  #letter:not(.pdfsrc) .sig>div{min-width:0;flex:1}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>سجل غيابات الطلبة – نظام بولونيا</h1>
+    <div class="sub" id="hdrSub"></div>
+  </div>
+  <div class="row noprint" style="margin:0">
+    <button class="btn sec sm" onclick="exportData()">حفظ نسخة احتياطية</button>
+    <button class="btn sec sm" onclick="document.getElementById('imp').click()">استرجاع نسخة</button>
+    <input type="file" id="imp" accept=".json,.txt,application/json,text/plain" style="display:none" onchange="importData(this)">
+    <button class="btn sec sm" onclick="document.getElementById('about').classList.add('on')">عن البرنامج</button>
+  </div>
+</header>
+
+<div id="about" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="box">
+    <h2>سجل غيابات الطلبة – نظام بولونيا</h2>
+    <div>برنامج لأستاذ المادة لمتابعة غيابات الطلبة الأسبوعية واحتساب نسب الغياب
+      (تنبيه، إنذار أولي، إنذار نهائي، رسوب بالغياب بدون عذر، رسوب بالغياب بعذر)
+      وإعداد الموقف الأسبوعي وطلب إصدار الأمر الإداري، وفق تعليمات وزارة التعليم العالي والبحث العلمي.</div>
+    <div class="own">حقوق البرنامج محفوظة لـ أ.د. ضياء مسلم عبد الامير</div>
+    <div style="color:var(--muted);font-size:13px">نسخة نظام بولونيا – الإصدار 1.0</div>
+    <button class="btn" style="margin-top:12px" onclick="document.getElementById('about').classList.remove('on')">إغلاق</button>
+    <div style="margin-top:14px"><a href="#" id="headLink" style="font-size:12.5px;color:var(--muted)" onclick="toggleHeadMode();return false;">وضع رئيس القسم</a></div>
+  </div>
+</div>
+<div id="busy">جارٍ تجهيز الملف...</div>
+<div id="shareBox" class="modal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="box">
+    <h2>الملف جاهز</h2>
+    <div id="shareName" style="unicode-bidi:plaintext;word-break:break-all;color:var(--muted);font-size:13.5px"></div>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="btn" id="shareGo" style="background:#6a1b9a">مشاركة / إرسال</button>
+      <button class="btn sec" id="shareSave">حفظ الملف</button>
+      <button class="btn sec" onclick="document.getElementById('shareBox').classList.remove('on')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div class="secbar">
+  <label for="secSel">الشعبة:</label>
+  <select id="secSel" onchange="switchSection(this.value)"></select>
+  <button class="btn sm" onclick="addSection()">+ شعبة جديدة</button>
+  <button class="btn red sm" id="secDel" onclick="delSection()">حذف الشعبة</button>
+  <button class="btn sm" id="coShareBtn" style="background:#6a1b9a" onclick="shareSection()">مشاركة الشعبة مع زميل</button>
+  <button class="btn sec sm" onclick="document.getElementById('imp').click()">فتح ملف مستلم</button>
+  <button class="btn sec sm" title="كيف أفتح ملفاً وصلني؟" onclick="receiveHelp()">؟</button>
+  <button class="btn sm" id="handBtn" style="display:none;background:#b26a00" onclick="handoverSection()">إرسال إلى أستاذ</button>
+  <button class="btn sm" id="headSwitch" style="display:none;background:#455a64" onclick="switchWorkspace()">وضع رئيس القسم</button>
+</div>
+<div id="headBanner" class="headbanner" style="display:none">
+  <b>وضع رئيس القسم:</b> هذه قائمة منفصلة لتجهيز شعب الأساتذة وإرسالها لهم. موادك وغياباتك كأستاذ محفوظة كما هي،
+  وتعود إليها بزر «العودة إلى موادي».
+</div>
+
+<nav>
+  <button data-t="t-info" class="on">١. معلومات المادة</button>
+  <button data-t="t-students">٢. الطلبة</button>
+  <button data-t="t-att">٣. الغياب الأسبوعي</button>
+  <button data-t="t-status">٤. موقف الطلبة</button>
+  <button data-t="t-letter">٥. الموقف الأسبوعي (الأمر الإداري)</button>
+</nav>
+
+<main>
+<!-- INFO -->
+<section class="tab on" id="t-info">
+  <h2>معلومات المادة والتدريسي</h2>
+  <div class="key">
+    <div class="grid">
+      <div><label><b>اسم المادة</b></label><input data-i="course" placeholder="اكتب اسم المادة"></div>
+      <div><label><b>اسم التدريسي</b></label><input data-i="teacher" placeholder="اكتب اسم التدريسي"></div>
+      <div><label><b>اللقب العلمي</b></label><input data-i="rank" placeholder="م.م / م / أ.م / أ"></div>
+      <div><label><b>تاريخ بداية الدوام</b> (أول يوم في الأسبوع الأول)</label><input type="date" data-i="start"></div>
+      <div><label><b>الفصل الدراسي</b></label><select data-i="term" onchange="termWeeks(this.value)"><option>الفصل الأول (الخريفي)</option><option>الفصل الثاني (الربيعي)</option><option>الفصل الصيفي</option></select></div>
+      <div><label><b>عدد أسابيع الدراسة</b> (15 للفصلين، 8 للصيفي، عدا الامتحانات)</label><input type="number" min="1" data-i="weeks"></div>
+      <div><label><b>رمز المادة</b></label><input data-i="code" placeholder="مثال: LAW201"></div>
+      <div><label><b>عدد الوحدات (ECTS)</b></label><input type="number" min="0" step="0.5" data-i="ects" placeholder="مثال: 5"></div>
+    </div>
+    <h3 style="margin-top:16px">جدول المحاضرات الأسبوعي للمادة</h3>
+    <div class="scroll" style="background:#fff;max-width:620px"><table class="sched" id="schedTable"></table></div>
+    <div class="row">
+      <button class="btn sm" onclick="addLec()">+ إضافة محاضرة في الأسبوع</button>
+      <div style="margin-right:auto"><label>مجموع الساعات المقررة (يُحسب تلقائياً)</label><div class="total" id="totalOut"></div></div>
+    </div>
+    <div class="note" style="margin-bottom:0"><b>مادة مشتركة؟</b> اترك خانة «التدريسي» فارغة لمحاضراتك، واكتب اسم زميلك في المحاضرات التي يدرّسها (مثلاً العملي).
+      بعدها اضغط <b>«مشاركة الشعبة مع زميل»</b> في الأعلى وأرسل الملف له بواتساب أو تيليغرام. يكفي أن يفتح زميلك الملف ويختار تطبيق «غيابات الطلبة»، فتُضاف الشعبة أو تُحدَّث تلقائياً.
+      وبعد أن يسجّل غيابات محاضراته يرسل لك ملفه بالطريقة نفسها، فتُدمج غياباته مع غياباتك.
+      ويظهر اسمه وتوقيعه في الكتاب الأسبوعي.</div>
+  </div>
+  <div class="grid">
+    <div><label>الجامعة (اكتب الاسم فقط)</label><input data-i="univ" placeholder="مثال: الكوفة"></div>
+    <div><label>الكلية (اكتب الاسم فقط)</label><input data-i="college" placeholder="مثال: القانون"></div>
+    <div><label>القسم (اكتب الاسم فقط)</label><input data-i="dept" placeholder="مثال: القانون العام"></div>
+    <div><label>المرحلة</label><input data-i="stage" placeholder="الأولى / الثانية ..."></div>
+    <div><label>الشعبة</label><input data-i="group" placeholder="أ / ب / ج ..."></div>
+    <div><label>الدراسة</label><select data-i="study"><option>الصباحية</option><option>المسائية</option></select></div>
+    <div><label>العام الدراسي</label><input data-i="year" placeholder="2026 - 2027"></div>
+  </div>
+
+  <h3>صورة التوقيع</h3>
+  <div class="sigbox">
+    <img id="sigPrev" alt="" style="display:none">
+    <button class="btn sec sm" onclick="document.getElementById('sigFile').click()">اختيار صورة التوقيع</button>
+    <button class="btn sec sm" id="sigDel" style="display:none" onclick="setSig('')">حذف الصورة</button>
+    <input type="file" id="sigFile" accept="image/*" style="display:none" onchange="loadSig(this)">
+    <span style="font-size:12.5px;color:var(--muted)">صوّر توقيعك على ورقة بيضاء، وستظهر الصورة فوق اسمك في الكتاب.</span>
+  </div>
+
+  <h3>نسب الغياب (من مجموع الساعات المقررة)</h3>
+  <div class="grid">
+    <div><label>تنبيه عند بلوغ الغياب بدون عذر (%)</label><input type="number" step="0.5" data-t="notice"></div>
+    <div><label>إنذار نهائي عند بلوغ الغياب بدون عذر (%)</label><input type="number" step="0.5" data-t="final"></div>
+    <div><label>رسوب بالغياب بدون عذر عند تجاوز (%)</label><input type="number" step="0.5" data-t="failU"></div>
+    <div><label>رسوب بالغياب بعذر مشروع عند تجاوز مجموع الغياب (%)</label><input type="number" step="0.5" data-t="failT"></div>
+  </div>
+  <div class="note" id="hoursHint"></div>
+</section>
+
+<!-- STUDENTS -->
+<section class="tab" id="t-students">
+  <h2>أسماء الطلبة</h2>
+  <div class="note">الصق الأسماء هنا — كل اسم في سطر مستقل (يمكن نسخها مباشرة من ملف Excel أو Word)، ثم اضغط «إضافة».</div>
+  <textarea id="bulk" placeholder="أحمد علي حسين&#10;زينب محمد جاسم&#10;..."></textarea>
+  <div class="row">
+    <button class="btn" onclick="addBulk()">إضافة الأسماء</button>
+    <button class="btn sec" onclick="sortStudents()">ترتيب أبجدي</button>
+    <button class="btn red" onclick="clearStudents()">حذف جميع الطلبة</button>
+  </div>
+  <div class="scroll"><table id="stTable"></table></div>
+</section>
+
+<!-- WEEKLY ATTENDANCE -->
+<section class="tab" id="t-att">
+  <h2>تسجيل الغياب الأسبوعي</h2>
+  <div class="row">
+    <button class="btn sec" onclick="setWeek(curWeek-1)">→ الأسبوع السابق</button>
+    <div style="width:150px"><label>الأسبوع</label><select id="wSel" onchange="setWeek(+this.value)"></select></div>
+    <button class="btn sec" onclick="setWeek(curWeek+1)">الأسبوع التالي ←</button>
+    <div id="wRange" style="padding-bottom:8px;color:var(--muted)"></div>
+  </div>
+  <div class="legend">
+    <span>لكل ساعة خانة بتاريخها:</span>
+    <span><b style="border:1px solid var(--line);width:auto;padding:0 6px">بدون ضغط</b> حاضر</span>
+    <span><b style="background:#ffd9d9;color:#b00020;width:auto;padding:0 6px">ضغطة</b> غائب</span>
+    <span><b style="background:#dbeafe;color:#1d4ed8;width:auto;padding:0 6px">ضغطة ثانية</b> مجاز (بعذر)</span>
+    <span><b style="border:1px solid var(--line);width:auto;padding:0 6px">ضغطة ثالثة</b> يرجع حاضراً</span>
+  </div>
+  <div class="scroll"><table id="weekTable"></table></div>
+
+  <h3>الخلاصة لجميع الأسابيع <span style="font-weight:400;font-size:13px;color:var(--muted)">(عدد ساعات الغياب في كل أسبوع — اضغط على أي خانة للانتقال إلى ذلك الأسبوع)</span></h3>
+  <div class="scroll" id="gridWrap"></div>
+</section>
+
+<!-- STATUS -->
+<section class="tab" id="t-status">
+  <h2>موقف الطلبة (حتى الآن)</h2>
+  <div class="note warn" id="noStart" style="display:none">لإظهار تواريخ الغياب باليوم والشهر (مثل 4/10) اكتب <b>«تاريخ بداية الدوام»</b> في تبويب «معلومات المادة». بدونه يظهر يوم المحاضرة ورقم الأسبوع فقط.</div>
+  <div class="stats" id="stats"></div>
+  <div class="row noprint">
+    <div style="width:240px"><label>عرض</label>
+      <select id="fStatus" onchange="renderStatus()">
+        <option value="-1">جميع الطلبة</option>
+        <option value="ch">تغيّر موقفهم ولم يُرفع بهم موقف</option>
+        <option value="1">تنبيه</option><option value="3">إنذار نهائي</option>
+        <option value="4">راسب بالغياب بدون عذر</option><option value="5">راسب بالغياب بعذر</option>
+      </select>
+    </div>
+  </div>
+  <div class="scroll"><table id="statusTable"></table></div>
+</section>
+
+<!-- LETTER -->
+<section class="tab" id="t-letter">
+  <div class="noprint">
+    <h2>الموقف الأسبوعي — طلب إصدار أمر إداري</h2>
+    <div class="note">في نهاية كل أسبوع اختر رقم الأسبوع، فيظهر كتاب يضم <b>فقط الطلبة الذين تغيّر موقفهم</b> منذ آخر موقف مُرسل، مع تواريخ غيابهم. يمكنك تعديل أي نص في الكتاب بالنقر عليه. بعد الطباعة/الإرسال اضغط «تأكيد الإرسال» حتى لا يتكرر الطلبة في موقف الأسبوع القادم.</div>
+    <div class="row">
+      <div style="width:150px"><label>موقف لغاية الأسبوع</label><select id="lWeek" onchange="chosenWeek=+this.value;renderLetter()"></select></div>
+      <div style="width:150px"><label>العدد</label><input id="lNo" oninput="renderLetter()"></div>
+      <div style="width:170px"><label>التاريخ</label><input type="date" id="lDate" oninput="renderLetter()"></div>
+      <label style="display:flex;gap:6px;align-items:center;margin:0 10px 8px"><input type="checkbox" id="lAll" style="width:auto" onchange="renderLetter()"> تضمين كل الطلبة الذين لديهم موقف (وليس المتغيرين فقط)</label>
+    </div>
+    <div class="row">
+      <button class="btn" onclick="window.print()">طباعة / حفظ PDF</button>
+      <button class="btn sec" onclick="copyLetter()">نسخ النص</button>
+    </div>
+    <div class="row" style="align-items:center">
+      <b>مشاركة الكتاب:</b>
+      <div style="width:150px"><select id="shFmt"><option value="pdf">PDF</option><option value="docx">وورد (Word)</option></select></div>
+      <button class="btn" style="background:#6a1b9a" onclick="shareLetter()">مشاركة / إرسال</button>
+    </div>
+    <div class="row">
+      <button class="btn" style="background:#2e7d32" onclick="confirmSent()">تأكيد الإرسال</button>
+    </div>
+    <h3>سجل المواقف المرسلة</h3>
+    <div id="logBox"></div>
+    <div class="note warn" id="sigWarn" style="display:none"></div>
+  </div>
+  <div id="letter"></div>
+</section>
+</main>
+<footer>حقوق البرنامج محفوظة لـ أ.د. ضياء مسلم عبد الامير ©</footer>
+
+<script>
+/* Bologna (دليل اعتماد عملية بولونيا 2025-2026، الفصل الرابع، ثانياً): warning at 7%, final warning at 14%
+   without excuse, fail by absence above 14%, or above 21% when the college council accepts an excuse.
+   Level 2 (the annual system's first warning) does not exist here and is never assigned. */
+const STATUS = ["منتظم","تنبيه","—","إنذار نهائي","راسب بالغياب (بدون عذر)","راسب بالغياب (بعذر)"];
+const ACTION = ["","تنبيههم تنبيهاً تحريرياً وإلكترونياً","","إنذارهم إنذاراً نهائياً","ترسيبهم بالغياب في المادة ومطالبتهم بإعادة دراستها دواماً وامتحاناً، مع استمرارهم بدراسة بقية موادهم","ترسيبهم بالغياب في المادة ومطالبتهم بإعادة دراستها دواماً وامتحاناً، مع استمرارهم بدراسة بقية موادهم"];
+const APP_TAG = "iq-bologna";
+const DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const KEY = "iq_bologna_v3";
+const APP = window.Android || null;   // set when running inside the Android app
+if (APP) window.print = () => APP.print();
+const uid = () => Math.random().toString(36).slice(2,10);
+// plain helpers instead of newer syntax (??, ?.) so older Android WebViews (Android 5–7) can run the page
+const nz = (v, d) => (v === undefined || v === null) ? d : v;
+const esc = s => String(nz(s, "")).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = n => (Math.round(n*10)/10).toLocaleString("ar-IQ");
+const pad = (n, w) => { let s=String(n); while (s.length<w) s="0"+s; return s; };
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1,2)}-${pad(d.getDate(),2)}`;
+const today = () => iso(new Date());
+const dmy = d => `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+const dm = d => `${d.getDate()}/${d.getMonth()+1}`;
+
+/* Data: ROOT holds every section (شعبة) plus what the teacher shares across them.
+   S is always the open section; the shared fields are copied into S.info / S.th so the rest of the code
+   reads them in one place, and save() copies them back. */
+/* Head of department: a device becomes "authorized" once the activation code is entered (only a SHA-256
+   fingerprint of the code is kept). An authorized device can switch between two separate workspaces:
+   the head's own courses (as a teacher) and the head's workspace of lists prepared for other teachers.
+   Each workspace has its own storage, so the two never mix. */
+const HEAD_KEY="iq_bologna_head", HEAD_WS_KEY="iq_bologna_head_ws", HEAD_HASH="6945bcc447f5779b86827d390b3ff50803f8e1e5c1a3092e665da5367ab82887";
+const isHead = () => { try{ return localStorage.getItem(HEAD_KEY)===HEAD_HASH; }catch(e){ return false; } };
+const IN_HEAD = (()=>{ try{ return isHead() && localStorage.getItem(HEAD_WS_KEY)==="1"; }catch(e){ return false; } })();
+const ROOT_KEY = IN_HEAD ? "iq_bologna_head_lists_v1" : "iq_bologna_v4";
+const SHARED = ["teacher","rank","sig","univ","college","dept"];
+const newSection = (info={}) => ({
+  id: uid(),
+  info: Object.assign({study:"الصباحية",term:"الفصل الأول (الخريفي)",weeks:15,start:"",sched:[{id:"l1",day:0,type:"نظري",hours:2}]}, info),
+  students:[], log:[], curWeek:1
+});
+let ROOT = null;
+try {
+  ROOT = JSON.parse(localStorage.getItem(ROOT_KEY));
+  if (!ROOT && !IN_HEAD) { // a single-section save from version 1.1 becomes the first section
+    const old = JSON.parse(localStorage.getItem(KEY));
+    if (old) ROOT = rootFromSingle(old);
+  }
+} catch(e){}
+function rootFromSingle(d){
+  const sec = Object.assign(newSection(), {info:d.info, students:d.students||[], log:d.log||[], curWeek:d.curWeek||1});
+  const shared = {th:d.th};
+  SHARED.forEach(k=>{ if (d.info && d.info[k]!=null) shared[k]=d.info[k]; });
+  return {sections:[sec], cur:sec.id, shared};
+}
+if (!ROOT || !ROOT.sections || !ROOT.sections.length) { const s=newSection(); ROOT={sections:[s], cur:s.id, shared:{}}; }
+ROOT.shared.th = Object.assign({notice:7,warn:999,final:14,failU:14,failT:21}, ROOT.shared.th);
+ROOT.shared.th.warn = 999;   // no first warning in Bologna
+let S;
+function openSection(id){
+  S = ROOT.sections.find(x=>x.id===id) || ROOT.sections[0];
+  ROOT.cur = S.id;
+  SHARED.forEach(k=>{ S.info[k] = nz(ROOT.shared[k], ""); });
+  S.th = ROOT.shared.th;
+}
+openSection(ROOT.cur);
+function rootJSON(pretty){
+  SHARED.forEach(k=>{ ROOT.shared[k] = S.info[k]; });
+  ROOT.shared.th = S.th;
+  // shared fields live once in ROOT.shared, not repeated in every section
+  return JSON.stringify(Object.assign({app:APP_TAG, version:4}, ROOT, {
+    sections: ROOT.sections.map(s=>{ const info=Object.assign({}, s.info); SHARED.forEach(k=>delete info[k]); return {id:s.id, info, students:s.students, log:s.log, curWeek:s.curWeek}; })
+  }), null, pretty?1:0);
+}
+function save(){
+  try{ localStorage.setItem(ROOT_KEY, rootJSON()); }
+  catch(e){ if (!save.warned){ save.warned=true; alert("تعذّر الحفظ: مساحة التخزين ممتلئة. احفظ نسخة احتياطية."); } }
+}
+const sectionLabel = s => [s.info.course||"مادة بدون اسم", s.info.stage && "المرحلة "+s.info.stage, s.info.group && "شعبة "+s.info.group, s.info.study].filter(Boolean).join(" – ");
+
+const SCHED = () => S.info.sched || [];
+const WH = () => SCHED().reduce((a,l)=>a+(+l.hours||0),0);       // weekly hours
+const WEEKS = () => Math.max(1, +S.info.weeks||15);
+// choosing a semester fills in its length from the Bologna guide: 15 weeks for the first and second, 8 for summer
+function termWeeks(term){
+  const w = /الصيفي/.test(term) ? 8 : 15;
+  if (+S.info.weeks !== w && confirm(`ضبط عدد أسابيع الدراسة على ${w} أسبوعاً حسب دليل بولونيا لهذا الفصل؟`)){
+    S.info.weeks=w; save(); fillInputs(); renderAll();
+  }
+}
+const TOTAL = () => WH() * WEEKS();
+// The guide equates 7% / 14% / 21% with one / two / three study weeks, so a limit is counted in whole hours
+// (7% of 60 h = 4 h = one week of 4 h); comparing raw percentages would skip the final warning altogether.
+const LIM = p => Math.max(1, Math.floor(TOTAL()*p/100 + 1e-9));
+// absences are stored per hour as "<lectureId>_<hourNo>"; each valid key counts one hour
+const lecHours = key => { const [id,h]=key.split("_"), l=SCHED().find(x=>x.id===id); return l && +h>=1 && +h<=+l.hours ? 1 : 0; };
+let curWeek = Math.min(S.curWeek||1, WEEKS());
+
+// date of a lecture: first day on/after the week's start that falls on the lecture's weekday
+function lecDate(week, lec){
+  if (!S.info.start) return null;
+  const d = new Date(S.info.start+"T00:00"); d.setDate(d.getDate()+7*(week-1));
+  while (d.getDay() !== +lec.day) d.setDate(d.getDate()+1);
+  return d;
+}
+// letter dates read right to left: day on the right, then month, then year. RLM marks around the slashes
+// keep the browser and Word from turning it into one left-to-right number (which would put the year first)
+const rdmy = d => [d.getDate(), d.getMonth()+1, d.getFullYear()].join("‏/‏");
+function weekRange(week, fmtD){
+  if (!S.info.start) return "";
+  const a=new Date(S.info.start+"T00:00"); a.setDate(a.getDate()+7*(week-1));
+  const b=new Date(a); b.setDate(b.getDate()+6);
+  const f=fmtD||dmy;
+  return `من ${f(a)} إلى ${f(b)}`;
+}
+
+/* ---------- calculation (cumulative up to a week) ---------- */
+function calc(st, upto){
+  upto = upto || WEEKS();
+  let u=0,e=0;
+  for (const wk in st.w){
+    if (+wk > upto) continue;
+    for (const id in st.w[wk]){ const h=lecHours(id); if (st.w[wk][id]==="u") u+=h; else e+=h; }
+  }
+  const T = TOTAL() || 1, th = S.th;
+  const up = u/T*100, tp = (u+e)/T*100;
+  let lvl = 0;
+  if (u > LIM(th.failU)) lvl = 4;
+  else if (u+e > LIM(th.failT)) lvl = 5;
+  // warnings count only unexcused absence: an excused (مجاز) absence never earns a warning
+  else if (u >= LIM(th.final)) lvl = 3;
+  else if (u >= LIM(th.notice)) lvl = 1;
+  return {u,e,up,tp,lvl,changed: lvl !== (st.reported||0) && lvl > 0};
+}
+function absDates(st, upto){
+  const out=[];
+  for (let wk=1; wk<=(upto||WEEKS()); wk++){
+    const a=st.w[wk]; if(!a) continue;
+    for (const l of SCHED()) {
+      let u=0,e=0;
+      for (let h=1; h<=l.hours; h++){ const v=a[l.id+"_"+h]; if(v==="u") u++; else if(v==="e") e++; }
+      if (!u && !e) continue;
+      const d=lecDate(wk,l);
+      // RLM marks keep each "date + hours" entry together in right-to-left text (screen, PDF and Word)
+      // day/month when the term start date is known; otherwise the lecture's weekday and week number
+      out.push("‏"+(d?dm(d):`${DAYS[l.day]} الأسبوع ${wk}`)+"‏"+(u?` غ${u}‏`:"")+(e?` م${e}‏`:""));
+    }
+  }
+  return out.join("، ");
+}
+const badge = l => `<span class="badge b${l}">${STATUS[l]}</span>`;
+const weekHasData = wk => S.students.some(s=>s.w[wk] && Object.keys(s.w[wk]).length);
+const lastWeek = () => { for (let w=WEEKS(); w>=1; w--) if (weekHasData(w)) return w; return 1; };
+
+/* ---------- tabs ---------- */
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); document.getElementById(b.dataset.t).classList.add("on");
+  renderAll();
+});
+
+/* ---------- info ---------- */
+document.querySelectorAll("[data-i]").forEach(el => {
+  el.oninput = () => { S.info[el.dataset.i] = el.type==="number" ? +el.value : el.value; save(); renderHeader(); renderSections(); };
+});
+document.querySelectorAll("input[data-t]").forEach(el => {
+  el.oninput = () => { S.th[el.dataset.t] = +el.value; save(); renderHeader(); };
+});
+function fillInputs(){
+  document.querySelectorAll("[data-i]").forEach(el => {
+    const v=S.info[el.dataset.i];
+    el.value = nz(v, el.tagName==="SELECT" ? el.options[0].value : "");
+  });
+  document.querySelectorAll("input[data-t]").forEach(el => { el.value = S.th[el.dataset.t]; });
+}
+
+/* ---------- sections (شعب) ---------- */
+function renderSections(){
+  const sel=document.getElementById("secSel");
+  sel.innerHTML=ROOT.sections.map(s=>`<option value="${s.id}">${esc(sectionLabel(s))}</option>`).join("");
+  sel.value=S.id;
+  document.getElementById("secDel").style.display = ROOT.sections.length>1 ? "" : "none";
+}
+function switchSection(id){
+  save(); openSection(id);
+  curWeek=Math.min(S.curWeek||1, WEEKS()); chosenWeek=0;
+  document.getElementById("lNo").value="";
+  save(); fillInputs(); renderAll();
+}
+function addSection(){
+  const copy = confirm(`شعبة جديدة\n\nهل تريد نسخ معلومات المادة وجدول المحاضرات من الشعبة الحالية؟\n(${sectionLabel(S)})\n\nموافق = نسخ   |   إلغاء = شعبة فارغة`);
+  let info={};
+  if (copy){
+    info=JSON.parse(JSON.stringify(S.info)); SHARED.forEach(k=>delete info[k]);
+    info.study = S.info.study==="المسائية" ? "الصباحية" : "المسائية";
+  }
+  const s=newSection(info); ROOT.sections.push(s);
+  switchSection(s.id);
+  document.querySelector('nav button[data-t="t-info"]').click();
+  alert(copy ? `أُضيفت الشعبة: ${sectionLabel(s)}\nراجع معلوماتها وجدولها، ثم أضف أسماء طلبتها.` : "أُضيفت شعبة جديدة. اكتب معلومات المادة وجدولها، ثم أضف أسماء الطلبة.");
+}
+/* ---------- head of department: prepare a section and hand it to a teacher ----------
+   The button shows only on a device where the activation code was entered. Only a SHA-256 fingerprint of the
+   code is kept here, so the code cannot be read from the page. The mode is kept per device, outside backups. */
+function sha256hex(str){   // small SHA-256 so it also works where crypto.subtle is missing (old phones, files on disk)
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const bytes=Array.from(new TextEncoder().encode(str)), bitLen=bytes.length*8;
+  bytes.push(0x80); while (bytes.length%64!==56) bytes.push(0);
+  for (let i=7;i>=0;i--) bytes.push(i>3 ? 0 : (bitLen>>>(i*8))&255);
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const r=(x,n)=>(x>>>n)|(x<<(32-n));
+  for (let o=0;o<bytes.length;o+=64){
+    const w=new Array(64);
+    for (let i=0;i<16;i++) w[i]=(bytes[o+4*i]<<24)|(bytes[o+4*i+1]<<16)|(bytes[o+4*i+2]<<8)|bytes[o+4*i+3];
+    for (let i=16;i<64;i++){ const s0=r(w[i-15],7)^r(w[i-15],18)^(w[i-15]>>>3), s1=r(w[i-2],17)^r(w[i-2],19)^(w[i-2]>>>10); w[i]=(w[i-16]+s0+w[i-7]+s1)|0; }
+    let [a,b,c,d,e,f,g,h]=H;
+    for (let i=0;i<64;i++){
+      const t1=(h+(r(e,6)^r(e,11)^r(e,25))+((e&f)^(~e&g))+K[i]+w[i])|0, t2=((r(a,2)^r(a,13)^r(a,22))+((a&b)^(a&c)^(b&c)))|0;
+      h=g; g=f; f=e; e=(d+t1)|0; d=c; c=b; b=a; a=(t1+t2)|0;
+    }
+    H=[H[0]+a,H[1]+b,H[2]+c,H[3]+d,H[4]+e,H[5]+f,H[6]+g,H[7]+h].map(x=>x|0);
+  }
+  return H.map(x=>pad((x>>>0).toString(16),8)).join("");
+}
+// switch workspaces by reloading, so every part of the page starts from the right data
+function enterWorkspace(head){
+  save();
+  try{ if (head) localStorage.setItem(HEAD_WS_KEY,"1"); else localStorage.removeItem(HEAD_WS_KEY); }catch(e){}
+  location.reload();
+}
+function switchWorkspace(){ enterWorkspace(!IN_HEAD); }
+// the link in «عن البرنامج»: authorize this device with the code, or withdraw the authorization
+function toggleHeadMode(){
+  if (isHead()){
+    if (!confirm("إلغاء تفعيل وضع رئيس القسم على هذا الجهاز؟\n(القوائم التي جهّزتها تبقى محفوظة، وتعود إليها عند التفعيل مرة أخرى)")) return;
+    try{ localStorage.removeItem(HEAD_KEY); }catch(e){}
+    enterWorkspace(false);
+    return;
+  }
+  const code=prompt("أدخل رمز تفعيل وضع رئيس القسم:");
+  if (code===null) return;
+  const h=sha256hex("iq-absence-head:"+code.trim().toUpperCase());
+  if (h!==HEAD_HASH){ alert("الرمز غير صحيح."); return; }
+  try{ localStorage.setItem(HEAD_KEY, h); }catch(e){}
+  alert("تم تفعيل وضع رئيس القسم على هذا الجهاز.\n\nستنتقل الآن إلى قائمة رئيس القسم: جهّز فيها شعب الأساتذة وأرسلها لهم.\nللعودة إلى موادك اضغط «العودة إلى موادي» أعلى الشاشة. بياناتك كأستاذ لا تتأثر.");
+  enterWorkspace(true);
+}
+function renderHead(){
+  const authorized=isHead();
+  const sw=document.getElementById("headSwitch");
+  sw.style.display = authorized ? "" : "none";
+  sw.textContent = IN_HEAD ? "← العودة إلى موادي" : "وضع رئيس القسم";
+  document.getElementById("handBtn").style.display = IN_HEAD ? "" : "none";
+  document.getElementById("coShareBtn").style.display = IN_HEAD ? "none" : "";
+  document.getElementById("headBanner").style.display = IN_HEAD ? "" : "none";
+  document.getElementById("headLink").textContent = authorized ? "إلغاء تفعيل وضع رئيس القسم على هذا الجهاز" : "وضع رئيس القسم";
+}
+// the section goes over as the receiving teacher's own: no sender name or signature, lectures left as theirs
+async function handoverSection(){
+  if (!IN_HEAD) return;
+  if (!S.students.length && !confirm("هذه الشعبة لا تحتوي أسماء طلبة بعد. إرسالها رغم ذلك؟")) return;
+  const sec=JSON.parse(JSON.stringify({id:S.id, info:S.info, students:S.students.map(s=>({id:s.id, name:s.name, w:s.w, reported:0})), log:[]}));
+  SHARED.forEach(k=>delete sec.info[k]); delete sec.info.coSigs;
+  const payload={app:APP_TAG, kind:"section-handover", version:1, at:new Date().toISOString(), section:sec};
+  const name=`قائمة_${sectionLabel(S).replace(/[\\/:*?"<>|–]/g,"").replace(/\s+/g,"_")}.json`;
+  busy(true);
+  try{ await shareBlob(new Blob([JSON.stringify(payload)],{type:"application/json"}), name); }
+  finally{ busy(false); }
+}
+// how to open a file received on WhatsApp/Telegram, worded for the device in use
+function receiveHelp(){
+  const iOS=/iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+  const android=/Android/i.test(navigator.userAgent);
+  alert(APP
+    ? "لفتح ملف وصلك (من زميل أو من رئيس القسم):\n\n• اضغط على الملف في واتساب أو تيليغرام واختر «غيابات الطلبة».\n• أو احفظ الملف، ثم اضغط هنا «فتح ملف مستلم» واختره."
+    : iOS
+    ? "لفتح ملف وصلك على الآيفون:\n\n١. في واتساب اضغط على الملف ثم زر المشاركة ⬆️ ← «حفظ في الملفات».\n٢. ارجع إلى البرنامج واضغط «فتح ملف مستلم»، واختر الملف من «الملفات»."
+    : android
+    ? "لفتح ملف وصلك على الأندرويد:\n\n• في واتساب اضغط مطوّلاً على الملف ← زر المشاركة ← اختر «غيابات الطلبة»، فيُفتح البرنامج ويُضاف الملف تلقائياً.\n  (يعمل هذا بعد تثبيت البرنامج على الشاشة الرئيسية)\n• أو اضغط هنا «فتح ملف مستلم» واختر الملف من مجلد التنزيلات."
+    : "لفتح ملف وصلك على الحاسبة:\n\nاحفظ الملف من واتساب أو البريد، ثم اضغط «فتح ملف مستلم» واختره.");
+}
+function receiveHandover(d){
+  const inc=d.section, local=ROOT.sections.find(s=>s.id===inc.id);
+  if (!local){
+    if (!confirm(`استلام شعبة جاهزة من رئيس القسم:\n«${sectionLabel(inc)}»\nعدد الطلبة: ${inc.students.length}\n\nإضافتها إلى شعبك؟`)) return;
+    const info=Object.assign({}, inc.info); SHARED.forEach(k=>delete info[k]); delete info.coSigs;
+    ROOT.sections=ROOT.sections.filter(s=>s.info.course || s.students.length);   // drop an untouched starter section
+    ROOT.sections.push({id:inc.id, info, students:inc.students, log:[], curWeek:1});
+    switchSection(inc.id);
+    alert(`تمت إضافة الشعبة «${sectionLabel(S)}» بأسماء طلبتها.\nاكتب اسمك ولقبك وضع صورة توقيعك في تبويب «معلومات المادة» إن لم تفعل بعد، ثم ابدأ تسجيل الغياب.`);
+    return;
+  }
+  // the same section again: add students who are new, keep every absence already recorded
+  switchSection(local.id);
+  let added=0;
+  for (const is of inc.students){
+    if (S.students.some(x=>x.id===is.id || norm(x.name)===norm(is.name))) continue;
+    S.students.push({id:is.id, name:is.name, w:{}, reported:0}); added++;
+  }
+  save(); renderAll();
+  alert(added ? `أُضيف ${added} طالب جديد إلى «${sectionLabel(S)}». الغيابات المسجّلة بقيت كما هي.` : "قائمة الطلبة عندك مطابقة لما أرسله رئيس القسم، ولم يتغيّر شيء.");
+}
+
+/* ---------- sharing a section with a co-teacher ----------
+   The file carries the whole section (same section and lecture ids on both phones). On receipt, each
+   teacher's own lectures keep their own marks and the sender's lectures take the sender's marks. */
+const myName = () => ((S.info.rank?S.info.rank+" ":"")+(S.info.teacher||"")).trim();
+async function shareSection(){
+  if (!S.info.teacher){ alert("اكتب اسمك أولاً في «اسم التدريسي» (تبويب معلومات المادة)."); return; }
+  const sec=JSON.parse(JSON.stringify({id:S.id, info:S.info, students:S.students, log:S.log}));
+  ["teacher","rank","sig"].forEach(k=>delete sec.info[k]);
+  sec.info.sched.forEach(l=>{ if (isMe(l.by)) l.by=myName(); });   // name my lectures explicitly for the receiver
+  delete sec.info.coSigs;   // colleagues' signatures stay on this phone; only my own travels
+  const payload={app:APP_TAG, kind:"section-share", version:1, from:myName(), sig:S.info.sig||"", at:new Date().toISOString(), section:sec};
+  const name=`شعبة_${sectionLabel(S).replace(/[\\/:*?"<>|–]/g,"").replace(/\s+/g,"_")}.json`;
+  busy(true);
+  try{ await shareBlob(new Blob([JSON.stringify(payload)],{type:"application/json"}), name); }
+  finally{ busy(false); }
+}
+function receiveShare(d){
+  const inc=d.section, from=d.from||"زميلك";
+  let local=ROOT.sections.find(s=>s.id===inc.id);
+  if (!local){
+    if (!confirm(`استلام شعبة جديدة من ${from}:\n«${sectionLabel(inc)}»\nعدد الطلبة: ${inc.students.length}`)) return;
+    const info=Object.assign({}, inc.info); SHARED.forEach(k=>delete info[k]);
+    local={id:inc.id, info, students:inc.students, log:inc.log||[], curWeek:1};
+    if (d.sig && d.from) local.info.coSigs={[d.from]:d.sig};
+    // a fresh app still has its untouched starter section: drop it so only the received one remains
+    ROOT.sections=ROOT.sections.filter(s=>s.info.course || s.students.length);
+    ROOT.sections.push(local); switchSection(local.id);
+    SCHED().forEach(l=>{ if (isMe(l.by)) l.by=""; });   // lectures my colleague assigned to me become mine
+    claimLectures(from);
+    save(); renderAll();
+    alert(`تمت إضافة الشعبة «${sectionLabel(S)}».\nسجّل غيابات محاضراتك، ثم أرسل الشعبة إلى ${from} من زر «مشاركة الشعبة مع زميل».`);
+    return;
+  }
+  if (isMe(d.from)){ alert("هذا ملف الشعبة الذي أرسلته أنت، ولا يحتوي على غيابات جديدة من زميلك."); return; }
+  if (!confirm(`دمج غيابات ${from} مع الشعبة «${sectionLabel(local)}»؟\n(تبقى غيابات محاضراتك كما هي، وتُحدَّث غيابات محاضرات ${from})`)) return;
+  switchSection(local.id);
+  if (d.sig && d.from){ S.info.coSigs=S.info.coSigs||{}; S.info.coSigs[d.from]=d.sig; }   // keep the colleague's latest signature
+  // lectures: add new ones, and take the sender's version of lectures that are not mine
+  for (const l of inc.info.sched||[]){
+    const mine=SCHED().find(x=>x.id===l.id);
+    const copy=Object.assign({}, l, {by: isMe(l.by) ? "" : l.by});
+    if (!mine) SCHED().push(copy);
+    else if (!isMe(mine.by)) Object.assign(mine, copy);
+  }
+  const others=new Set(SCHED().filter(l=>!isMe(l.by)).map(l=>l.id));
+  let changes=0, added=0;
+  for (const is of inc.students){
+    let st=S.students.find(x=>x.id===is.id) || S.students.find(x=>norm(x.name)===norm(is.name));
+    if (!st){ st={id:is.id, name:is.name, w:{}, reported:is.reported||0}; S.students.push(st); added++; }
+    for (let wk=1; wk<=WEEKS(); wk++){
+      const a=st.w[wk]||{}, b=(is.w||{})[wk]||{};
+      for (const k of new Set([...Object.keys(a), ...Object.keys(b)])){
+        if (!others.has(k.split("_")[0])) continue;
+        if (b[k]){ if (a[k]!==b[k]){ a[k]=b[k]; changes++; } }
+        else if (a[k]){ delete a[k]; changes++; }
+      }
+      if (Object.keys(a).length) st.w[wk]=a; else delete st.w[wk];
+    }
+    st.reported=Math.max(st.reported||0, is.reported||0);
+  }
+  const seen=new Set(S.log.map(l=>JSON.stringify(l)));
+  (inc.log||[]).forEach(l=>{ if(!seen.has(JSON.stringify(l))) S.log.push(l); });
+  S.log.sort((x,y)=>(y.week||0)-(x.week||0));
+  save(); fillInputs(); renderAll();
+  alert(`تم الدمج: ${changes} تعديل على غيابات محاضرات ${from}${added?`، وأُضيف ${added} طالب`:""}.`);
+}
+// if my name was spelled differently by my colleague, let me claim the lectures meant for me
+function claimLectures(from){
+  if (SCHED().some(l=>isMe(l.by))) return;
+  for (const n of coTeachers()){
+    if (n===from) continue;
+    if (confirm(`لم يُعثر على اسمك في جدول المحاضرات.\nهل أنت «${n}»؟`)){
+      SCHED().forEach(l=>{ if ((l.by||"").trim()===n) l.by=""; });
+      return;
+    }
+  }
+}
+function delSection(){
+  if (ROOT.sections.length<2) return;
+  if (!confirm(`حذف الشعبة «${sectionLabel(S)}» بكل طلبتها وغياباتها وسجل مواقفها؟\nلا يمكن التراجع عن الحذف.`)) return;
+  if (!confirm("تأكيد نهائي: حذف هذه الشعبة؟")) return;
+  ROOT.sections=ROOT.sections.filter(x=>x.id!==S.id);
+  openSection(ROOT.sections[0].id); switchSection(S.id);
+}
+function addLec(){ SCHED().push({id:uid(),day:2,type:"عملي",hours:2}); save(); renderSched(); renderHeader(); }
+function setLec(id,k,v){ const l=SCHED().find(x=>x.id===id); l[k]= (k==="type"||k==="by")?v:+v; save(); renderHeader(); }
+/* shared courses: a lecture's "by" is empty for my own lectures, or the co-teacher's name */
+const norm = s => String(s||"").replace(/[\s.ـ]/g,"").replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي");
+function isMe(name){
+  const n=norm(name), t=norm(S.info.teacher);
+  return !n || n==="انا" || (t && (n===t || n===norm((S.info.rank||"")+S.info.teacher) || n.endsWith(t)));
+}
+const coTeachers = () => [...new Set(SCHED().map(l=>(l.by||"").trim()).filter(n=>n && !isMe(n)))];
+function delLec(id){
+  if(!confirm("حذف هذه المحاضرة من الجدول؟ ستُحذف غياباتها المسجلة أيضاً.")) return;
+  S.info.sched=SCHED().filter(l=>l.id!==id);
+  S.students.forEach(s=>{for(const w in s.w) for(const k in s.w[w]) if(k.startsWith(id+"_")) delete s.w[w][k];});
+  save(); renderSched(); renderHeader();
+}
+function renderSched(){
+  document.getElementById("schedTable").innerHTML=`<tr><th>ت</th><th>يوم المحاضرة</th><th>النوع</th><th>عدد الساعات</th><th>التدريسي</th><th></th></tr>`+
+    SCHED().map((l,i)=>`<tr><td>${i+1}</td>
+      <td><select onchange="setLec('${l.id}','day',this.value)">${DAYS.map((d,k)=>`<option value="${k}" ${k==l.day?"selected":""}>${d}</option>`).join("")}</select></td>
+      <td><select onchange="setLec('${l.id}','type',this.value)">${["نظري","عملي"].map(t=>`<option ${t===l.type?"selected":""}>${t}</option>`).join("")}</select></td>
+      <td><input type="number" min="1" value="${l.hours}" style="width:80px" oninput="setLec('${l.id}','hours',this.value)"></td>
+      <td><input value="${esc(l.by||"")}" placeholder="فارغ = محاضراتي" style="min-width:150px" onchange="setLec('${l.id}','by',this.value)"></td>
+      <td><span class="del" onclick="delLec('${l.id}')">✕ حذف</span></td></tr>`).join("");
+}
+function renderHeader(){
+  const i=S.info;
+  document.getElementById("hdrSub").textContent = [i.course, i.stage && "المرحلة "+i.stage, i.study && "الدراسة "+i.study, i.dept].filter(Boolean).join(" — ") || "لأستاذ المادة — وفق تعليمات وزارة التعليم العالي والبحث العلمي";
+  const T=TOTAL(), th=S.th, h=p=>fmt(LIM(p));
+  document.getElementById("totalOut").textContent = `${fmt(T)} ساعة  (${fmt(WH())} ساعة أسبوعياً × ${fmt(WEEKS())} أسبوع)`;
+  document.getElementById("hoursHint").innerHTML = T ?
+    `بمجموع <b>${fmt(T)}</b> ساعة: تنبيه تحريري وإلكتروني عند بلوغ الغياب بدون عذر <b>${h(th.notice)}</b> ساعة (${fmt(th.notice)}%، أسبوع دراسي)، إنذار نهائي عند بلوغه <b>${h(th.final)}</b> ساعة (${fmt(th.final)}%، أسبوعان)، والرسوب بالغياب إذا تجاوز الغياب بدون عذر <b>${h(th.failU)}</b> ساعة، أو تجاوز مجموع الغياب <b>${h(th.failT)}</b> ساعة (${fmt(th.failT)}%، ثلاثة أسابيع) عند قبول العذر من مجلس الكلية. الغياب المجاز لا يُحسب في التنبيه والإنذار. الراسب بالغياب في مادة يُعيد دراستها دواماً وامتحاناً، ويُكمل بقية مواده.
+      <br><span style="font-size:12.5px">المرجع: دليل اعتماد عملية بولونيا في الجامعات العراقية 2025–2026، الفصل الرابع، ثانياً: متطلبات الدوام والامتحانات.</span>` :
+    "أضف محاضرات الجدول الأسبوعي وعدد الأسابيع لحساب النسب.";
+}
+
+/* ---------- students ---------- */
+function addBulk(){
+  const names = document.getElementById("bulk").value.split(/\r?\n/).map(s=>s.replace(/^\s*\d+[\s.\-–)]*\s*/,"").trim()).filter(Boolean);
+  const have = new Set(S.students.map(s=>s.name));
+  let n=0; for (const nm of names) if (!have.has(nm)) { S.students.push({id:uid(),name:nm,w:{},reported:0}); have.add(nm); n++; }
+  document.getElementById("bulk").value=""; save(); renderStudents();
+  alert(`تمت إضافة ${n} طالب/ة`);
+}
+function sortStudents(){ S.students.sort((a,b)=>a.name.localeCompare(b.name,"ar")); save(); renderStudents(); }
+function clearStudents(){ if(confirm("حذف جميع الطلبة وسجلات غيابهم؟")){ S.students=[]; save(); renderStudents(); } }
+function delStudent(id){ const s=S.students.find(x=>x.id===id); if(confirm("حذف الطالب: "+s.name+"؟")){ S.students=S.students.filter(x=>x.id!==id); save(); renderStudents(); } }
+function renameStudent(id,v){ const s=S.students.find(x=>x.id===id); s.name=v.trim()||s.name; save(); }
+function renderStudents(){
+  document.getElementById("stTable").innerHTML = `<tr><th>ت</th><th class="name">اسم الطالب (قابل للتعديل)</th><th>حذف</th></tr>` +
+    (S.students.map((s,i)=>`<tr><td>${i+1}</td><td class="name"><input value="${esc(s.name)}" onchange="renameStudent('${s.id}',this.value)" style="border:none"></td><td><span class="del" onclick="delStudent('${s.id}')">✕ حذف</span></td></tr>`).join("") ||
+    `<tr><td colspan="3" style="color:var(--muted)">لا يوجد طلبة بعد</td></tr>`);
+}
+
+/* ---------- weekly attendance ---------- */
+function setWeek(w){ curWeek = Math.min(WEEKS(), Math.max(1, w)); S.curWeek = curWeek; save(); renderAtt(); }
+// one box per lecture hour: empty = present, 1st click = absent, 2nd click = excused (مجاز), 3rd click = present again
+const cellHTML = (a, date) => a==="u" ? `غائب<span class="cd">${date}</span>` : a==="e" ? `مجاز<span class="cd">${date}</span>` : `<span class="cd">${date}</span>`;
+function toggle(sid, key, td){
+  const st=S.students.find(x=>x.id===sid), wk=st.w[curWeek]=st.w[curWeek]||{}, cur=wk[key];
+  const nx = !cur ? "u" : cur==="u" ? "e" : null;
+  if (nx) wk[key]=nx; else delete wk[key];
+  if (!Object.keys(wk).length) delete st.w[curWeek];
+  td.className="c "+(nx||""); td.innerHTML=cellHTML(nx, td.dataset.d);
+  save(); updateRow(st); renderGrid();
+}
+function updateRow(st){
+  const tr=document.getElementById("r_"+st.id); if(!tr) return;
+  const r=calc(st);
+  tr.querySelector(".tu").textContent=fmt(r.u); tr.querySelector(".te").textContent=fmt(r.e);
+  tr.querySelector(".tp").textContent=fmt(r.up)+"%";
+  tr.querySelector(".ts").innerHTML=badge(r.lvl)+(r.changed?' <b style="color:var(--pri)" title="تغيّر موقفه">●</b>':'');
+}
+function renderAtt(){
+  const sel=document.getElementById("wSel");
+  sel.innerHTML=Array.from({length:WEEKS()},(_,i)=>`<option value="${i+1}">الأسبوع ${(i+1).toLocaleString("ar-IQ")}</option>`).join("");
+  sel.value=curWeek; document.getElementById("wRange").textContent=weekRange(curWeek);
+  const t=document.getElementById("weekTable"), L=SCHED();
+  if(!S.students.length){ t.innerHTML='<tr><td style="padding:12px;color:var(--muted)">أضف الطلبة أولاً من تبويب «الطلبة».</td></tr>'; renderGrid(); return; }
+  if(!L.length){ t.innerHTML='<tr><td style="padding:12px;color:var(--muted)">أضف جدول المحاضرات الأسبوعي من تبويب «معلومات المادة».</td></tr>'; renderGrid(); return; }
+  const hrs = l => [...Array(Math.max(0,+l.hours||0))].map((_,k)=>k+1);
+  const ld = L.map(l=>{const d=lecDate(curWeek,l); return d?dm(d):"";});
+  t.innerHTML=`<tr><th rowspan="2">ت</th><th rowspan="2" class="name">الاسم</th>`+
+    L.map((l,j)=>{const d=lecDate(curWeek,l);return `<th colspan="${hrs(l).length}" class="lec">${DAYS[l.day]} ${d?dmy(d):""}<span class="th-s">${l.type}${isMe(l.by)?"":" · "+esc(l.by)}</span></th>`;}).join("")+
+    `<th rowspan="2">مجموع الغياب (س)</th><th rowspan="2">مجموع المجاز (س)</th><th rowspan="2">النسبة بدون عذر</th><th rowspan="2">الموقف</th></tr><tr>`+
+    L.map(l=>hrs(l).map(h=>`<th class="hr">الساعة ${h.toLocaleString("ar-IQ")}</th>`).join("")).join("")+`</tr>`+
+    S.students.map((s,i)=>{
+      const wk=s.w[curWeek]||{};
+      return `<tr id="r_${s.id}"><td>${i+1}</td><td class="name">${esc(s.name)}</td>`+
+        L.map((l,j)=>hrs(l).map(h=>{const k=l.id+"_"+h, a=wk[k]||"";
+          return `<td class="c ${a} ${h===1?"first":""}" data-d="${ld[j]}" onclick="toggle('${s.id}','${k}',this)">${cellHTML(a,ld[j])}</td>`;}).join("")).join("")+
+        `<td class="tu"></td><td class="te"></td><td class="tp"></td><td class="ts"></td></tr>`;
+    }).join("");
+  S.students.forEach(updateRow);
+  renderGrid();
+}
+function renderGrid(){
+  const g=document.getElementById("gridWrap");
+  if(!S.students.length){ g.innerHTML=""; return; }
+  const N=WEEKS(), wk=[...Array(N)].map((_,i)=>i+1);
+  g.innerHTML=`<table><tr><th class="name">الاسم</th>`+wk.map(w=>`<th class="${w===curWeek?"cur":""}" style="cursor:pointer" onclick="setWeek(${w})">${w}</th>`).join("")+`<th>المجموع</th><th>الموقف</th></tr>`+
+    S.students.map(s=>{
+      const r=calc(s);
+      return `<tr><td class="name">${esc(s.name)}</td>`+wk.map(w=>{
+        let u=0,e=0; const a=s.w[w]||{};
+        for(const id in a){ if(a[id]==="u") u+=lecHours(id); else e+=lecHours(id); }
+        const c = u&&e ? "m" : u ? "u" : e ? "e" : "";
+        return `<td class="g ${c} ${w===curWeek?"cur":""}" onclick="setWeek(${w})">${(u?`<bdi style="color:#b00020">غ${u}</bdi>`:"")+(u&&e?"<br>":"")+(e?`<bdi style="color:#1d4ed8">م${e}</bdi>`:"")}</td>`;
+      }).join("")+`<td>${fmt(r.u+r.e)}</td><td>${badge(r.lvl)}</td></tr>`;
+    }).join("")+`</table>`;
+}
+
+/* ---------- status ---------- */
+function renderStatus(){
+  document.getElementById("noStart").style.display = S.info.start ? "none" : "";
+  const f=document.getElementById("fStatus").value, cnt=[0,0,0,0,0,0]; let ch=0;
+  const rows=S.students.map(s=>({s,r:calc(s)}));
+  rows.forEach(x=>{cnt[x.r.lvl]++; if(x.r.changed) ch++;});
+  document.getElementById("stats").innerHTML =
+    `<div class="stat"><div class="n">${S.students.length}</div><div class="l">عدد الطلبة</div></div>`+
+    cnt.map((c,i)=>(i && i!==2)?`<div class="stat"><div class="n" style="color:var(--t${i})">${c}</div><div class="l">${STATUS[i]}</div></div>`:"").join("")+
+    `<div class="stat" style="border-color:var(--pri)"><div class="n" style="color:var(--pri)">${ch}</div><div class="l">بانتظار رفع الموقف</div></div>`;
+  const list=rows.filter(x=> f==="-1" || (f==="ch"?x.r.changed: x.r.lvl==+f));
+  document.getElementById("statusTable").innerHTML=`<tr><th>ت</th><th class="name">الاسم</th><th>غياب بدون عذر (س)</th><th>غياب بعذر (س)</th><th>نسبة بدون عذر</th><th>نسبة الغياب الكلي</th><th>تواريخ الغياب</th><th>الموقف الحالي</th><th>آخر موقف مرفوع</th></tr>`+
+    (list.map((x,i)=>`<tr><td>${i+1}</td><td class="name">${esc(x.s.name)}</td><td>${fmt(x.r.u)}</td><td>${fmt(x.r.e)}</td><td>${fmt(x.r.up)}%</td><td>${fmt(x.r.tp)}%</td><td class="dates">${absDates(x.s)||"—"}</td><td>${badge(x.r.lvl)}${x.r.changed?' <b style="color:var(--pri)">● جديد</b>':''}</td><td>${(x.s.reported||0)?badge(x.s.reported):"—"}</td></tr>`).join("")||`<tr><td colspan="9" style="color:var(--muted)">لا يوجد</td></tr>`);
+}
+
+/* ---------- weekly letter ---------- */
+let chosenWeek=0;   // 0 = follow the last week that has entries
+function letterWeek(){ return chosenWeek || lastWeek(); }
+function letterRows(){
+  const all=document.getElementById("lAll").checked, W=letterWeek();
+  return S.students.map(s=>({s,r:calc(s,W)})).filter(x=> all ? x.r.lvl>0 : x.r.changed);
+}
+function renderLetter(){
+  const ws=document.getElementById("lWeek");
+  ws.innerHTML=Array.from({length:WEEKS()},(_,i)=>`<option value="${i+1}">الأسبوع ${(i+1).toLocaleString("ar-IQ")}</option>`).join("");
+  ws.value = letterWeek();
+  const i=S.info, W=letterWeek(), rows=letterRows();
+  const dEl=document.getElementById("lDate"); if(!dEl.value) dEl.value=today();
+  const date=rdmy(new Date(dEl.value+"T00:00"));
+  let body="";
+  if(!rows.length) body=`<p style="text-align:center;color:#888">لا يوجد طلبة تغيّر موقفهم لغاية الأسبوع (${W}).</p>`;
+  // the letter shows both failure kinds (4 = unexcused, 5 = excused) as one group "راسب بالغياب";
+  // the calculation and the status tab still tell them apart
+  else for (const grp of [{lv:[1],head:ACTION[1],act:STATUS[1]}, {lv:[3],head:ACTION[3],act:STATUS[3]}, {lv:[4,5],head:ACTION[4],act:"راسب بالغياب"}]){
+    const g=rows.filter(x=>grp.lv.includes(x.r.lvl)); if(!g.length) continue;
+    body+=`<div class="grp">• الطلبة المطلوب ${grp.head}:</div>
+      <table><tr><th>ت</th><th>اسم الطالب</th><th>ساعات الغياب بدون عذر</th><th>ساعات الغياب بعذر</th><th>نسبة الغياب بدون عذر</th><th>النسبة الكلية للغياب</th><th>الإجراء المطلوب</th></tr>`+
+      g.map((x,k)=>`<tr><td>${k+1}</td><td class="nm">${esc(x.s.name)}</td><td>${fmt(x.r.u)}</td><td>${fmt(x.r.e)}</td><td>${fmt(x.r.up)}%</td><td>${fmt(x.r.tp)}%</td><td>${grp.act}</td></tr>`).join("")+`</table>`;
+  }
+  // "الكوفة" → "جامعة الكوفة", but "جامعة الكوفة" stays as typed
+  const pre=(word,v)=>{ v=String(v||"").trim(); return !v ? word+" ......" : v.startsWith(word) ? v : word+" "+v; };
+  const me=(i.rank?i.rank+" ":"")+(i.teacher||"......"), co=coTeachers();
+  // one block per teacher: signature image (or room to sign) above the name; a co-teacher block
+  // appears only when the schedule names one, with the signature that came in their shared file
+  const coSig = n => { const m=i.coSigs||{}; const k=Object.keys(m).find(k=>norm(k)===norm(n) || norm(k).endsWith(norm(n)) || norm(n).endsWith(norm(k))); return k ? m[k] : ""; };
+  // signature, name, then the letter date under each teacher's name
+  const block = (img, name) => `<div class="sg">${img?`<img src="${img}" alt="">`:'<div class="sp"></div>'}<div contenteditable="true">${esc(name)}</div><div class="dt" contenteditable="true">${date}</div></div>`;
+  const sigs = co.map(n=>block(coSig(n), n)).join("") + block(i.sig, me);
+  // say plainly what is missing on this device (the phone app and this page keep separate data)
+  const miss=[];
+  if (!i.teacher) miss.push("اسمك (تبويب «معلومات المادة» ← اسم التدريسي)");
+  if (!i.sig) miss.push("صورة توقيعك (تبويب «معلومات المادة» ← اختيار صورة التوقيع)");
+  co.filter(n=>!coSig(n)).forEach(n=>miss.push(`توقيع ${n}: يصل تلقائياً عندما تستلم ملف الشعبة منه`));
+  const warn=document.getElementById("sigWarn");
+  warn.style.display = miss.length ? "" : "none";
+  warn.innerHTML = miss.length ? `<b>ينقص الكتاب على هذا الجهاز:</b><br>• ${miss.map(esc).join("<br>• ")}<br>
+    <span style="font-size:12.5px">${APP
+      ? "ملاحظة: بيانات هذا التطبيق خاصة بهذا الموبايل. إذا كانت بياناتك وتواقيعك مسجّلة على الحاسبة: اضغط في نسخة الحاسبة «حفظ نسخة احتياطية»، ثم انقل الملف إلى الموبايل واضغط هنا «استرجاع نسخة»."
+      : "ملاحظة: بيانات هذه النسخة خاصة بهذه الحاسبة. إذا كانت بياناتك وتواقيعك مسجّلة في تطبيق الموبايل: اضغط في التطبيق «حفظ نسخة احتياطية»، ثم انقل الملف إلى الحاسبة واضغط هنا «استرجاع نسخة»."}</span>` : "";
+  document.getElementById("letter").innerHTML=`
+  <div class="lh" contenteditable="true">
+    <div>${esc(pre("جامعة",i.univ))}<br>${esc(pre("كلية",i.college))}<br>${esc(pre("قسم",i.dept))}</div>
+    <div style="text-align:left">العدد: ${esc(document.getElementById("lNo").value||"......")}<br>التاريخ: ${date}</div>
+  </div>
+  <div contenteditable="true">
+  <div class="to">السيد العميد المحترم<br>السيد رئيس القسم المحترم</div>
+  <div class="subj">م / موقف غيابات الطلبة للأسبوع (${W}) وطلب إصدار أمر إداري</div>
+  <p>تحية طيبة ...</p>
+  <p>استناداً إلى دليل اعتماد عملية بولونيا في الجامعات العراقية للسنة الدراسية 2025–2026 (الفصل الرابع/ثانياً: متطلبات الدوام والامتحانات)، يرجى التفضل بالموافقة على إحالة المطالعة إلى شعبة التسجيل لغرض إصدار الأمر الإداري بحق الطلبة المدرجة أسماؤهم أدناه، من طلبة المرحلة (${esc(i.stage||"......")})${i.group?` الشعبة (${esc(i.group)})`:""} الدراسة ${esc(i.study||"")}، في المادة الدراسية (${esc(i.course||"......")})${i.code?` رمز المادة (${esc(i.code)})`:""}${i.ects?` بواقع (${fmt(+i.ects)}) وحدات ECTS`:""} للعام الدراسي (${esc(i.year||"......")}) / ${esc(i.term||"")}، وذلك لتغيّر موقفهم من الغياب لغاية الأسبوع (${W})${weekRange(W)?" ("+weekRange(W,rdmy)+")":""}، علماً أن مجموع الساعات المقررة للمادة (${fmt(TOTAL())}) ساعة بواقع (${fmt(WH())}) ساعة أسبوعياً ولمدة (${fmt(WEEKS())}) أسبوعاً.</p>
+  </div>
+  ${body}
+  <p contenteditable="true" style="margin-top:14px">مع الاحترام والتقدير ...</p>
+  <div class="sig">
+    <div class="att" contenteditable="true">المرفقات:<br>- كشف الحضور والغياب</div>
+    ${sigs}
+  </div>`;
+  renderLog();
+}
+function copyLetter(){
+  const text=document.getElementById("letter").innerText;
+  if (APP) { APP.copy(text); alert("تم نسخ نص الكتاب"); return; }
+  navigator.clipboard.writeText(text).then(()=>alert("تم نسخ نص الكتاب"));
+}
+function confirmSent(){
+  const rows=letterRows(), W=letterWeek(); if(!rows.length){alert("لا يوجد طلبة في هذا الموقف.");return;}
+  if(!confirm(`تأكيد إرسال موقف الأسبوع (${W}) بـ ${rows.length} طالب/ة؟`))return;
+  S.log.unshift({no:document.getElementById("lNo").value,date:document.getElementById("lDate").value,week:W,items:rows.map(x=>({name:x.s.name,lvl:x.r.lvl,up:x.r.up}))});
+  rows.forEach(x=>x.s.reported=x.r.lvl); document.getElementById("lNo").value=""; save(); renderLetter();
+}
+function renderLog(){
+  document.getElementById("logBox").innerHTML = S.log.length ?
+    `<div class="scroll"><table><tr><th>الأسبوع</th><th>العدد</th><th>التاريخ</th><th>عدد الطلبة</th><th>التفاصيل</th></tr>`+
+    S.log.map(l=>`<tr><td>${nz(l.week,"—")}</td><td>${esc(l.no||"—")}</td><td>${esc(l.date)}</td><td>${l.items.length}</td><td style="text-align:right;white-space:normal">${l.items.map(x=>esc(x.name)+" ("+STATUS[x.lvl]+")").join("، ")}</td></tr>`).join("")+`</table></div>`
+    : '<p style="color:var(--muted)">لم يُرسل أي موقف بعد.</p>';
+}
+
+/* ---------- backup ---------- */
+function exportData(){
+  const name=`غيابات_بولونيا_جميع_الشعب_${today()}.json`, json=rootJSON(true);
+  if (APP) { const where=APP.saveFile(name, json); alert(where ? "تم حفظ النسخة الاحتياطية في:\n"+where : "تعذّر حفظ الملف"); return; }
+  if (IS_MOBILE){ shareBlob(new Blob([json],{type:"application/json"}), name); return; }   // phone browser: share menu or Files
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([json],{type:"application/json"}));
+  a.download=name; a.click();
+}
+function importData(inp){
+  const f=inp.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>handleImportText(r.result);
+  r.readAsText(f); inp.value="";
+}
+// also called by the Android app when a file is opened from WhatsApp, Telegram, Files...
+// reads the program's data out of a received file, tolerating what apps sometimes add on the way
+// (a BOM, spaces, a caption before or after the data)
+function parseReceived(text){
+  let t=String(text||"").replace(/^﻿/,"").trim();
+  try{ return JSON.parse(t); }catch(e){}
+  const a=t.indexOf("{"), b=t.lastIndexOf("}");
+  if (a>=0 && b>a){ try{ return JSON.parse(t.slice(a,b+1)); }catch(e){} }
+  return null;
+}
+function handleImportText(text){
+  const d=parseReceived(text);
+  if (!d || typeof d!=="object"){
+    // say what arrived (size and first characters) so a screenshot of this message shows the cause
+    const s=String(text||"");
+    if (s.length<300 && s.indexOf("{")<0 && /\.(json|txt)(\s|\)|$)/i.test(s)){   // only the file's name came, not its contents
+      alert("وصل اسم الملف فقط وليس محتواه:\n«"+s.trim().slice(0,80)+"»\n\nهذا يحدث أحياناً عند المشاركة من واتساب بالضغط المطوّل.\nالحل:\n١. في واتساب اضغط على الملف مرة واحدة ليُحمَّل.\n٢. ارجع إلى البرنامج واضغط «فتح ملف مستلم».\n٣. اختر الملف من «التنزيلات» أو مجلد «WhatsApp».");
+      return;
+    }
+    alert("هذا الملف ليس من ملفات برنامج غيابات الطلبة."
+      +"\n\nما وصل: "+(s.length ? `${s.length} حرفاً، يبدأ بـ:\n«${s.slice(0,70).replace(/\s+/g," ")}»` : "ملف فارغ")
+      +"\n\nإذا تكرر ذلك: احفظ الملف من واتساب، ثم اضغط «فتح ملف مستلم» واختره.");
+    return;
+  }
+  // a file made by the annual-system program belongs there, not in this Bologna program
+  if (d.app==="iq-absence"){ alert("هذا الملف من برنامج غيابات الطلبة (النظام السنوي).\nافتحه في ذلك البرنامج، وليس في نسخة بولونيا."); return; }
+  if (d.kind==="section-share" && d.section){ receiveShare(d); return; }   // a section sent by a co-teacher
+  if (d.kind==="section-handover" && d.section){ receiveHandover(d); return; }   // a ready section from the head of department
+  if (d.sections && d.sections.length){   // backup of all sections
+    if (!confirm(`النسخة تحتوي ${d.sections.length} شعبة.\nاستبدال جميع البيانات الحالية بها؟`)) return;
+    ROOT={sections:d.sections, cur:d.cur, shared:d.shared||{}};
+  } else if (d.students && d.info && d.info.sched){   // backup from version 1.1 (one section)
+    if (!confirm("هذه نسخة من إصدار سابق فيها شعبة واحدة.\nإضافتها كشعبة جديدة إلى الشعب الحالية؟")) return;
+    const one=rootFromSingle(d); ROOT.sections.push(one.sections[0]); ROOT.cur=one.sections[0].id;
+  } else { alert("هذا الملف ليس من ملفات برنامج غيابات الطلبة."); return; }
+  openSection(ROOT.cur); save(); location.reload();
+}
+window.receiveFileText = handleImportText;
+
+/* ---------- signature image ---------- */
+function loadSig(inp){
+  const f=inp.files[0]; inp.value=""; if(!f) return;
+  const img=new Image(), url=URL.createObjectURL(f);
+  img.onload=()=>{ // shrink to at most 500px wide so it stays small in storage
+    const k=Math.min(1, 500/img.width), c=document.createElement("canvas");
+    c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(url); setSig(c.toDataURL("image/png"));
+  };
+  img.onerror=()=>alert("تعذّر قراءة الصورة");
+  img.src=url;
+}
+function setSig(d){ S.info.sig=d; save(); renderSig(); renderLetter(); }
+function renderSig(){
+  const p=document.getElementById("sigPrev");
+  p.style.display=S.info.sig?"":"none"; p.src=S.info.sig||"";
+  document.getElementById("sigDel").style.display=S.info.sig?"":"none";
+}
+
+/* ---------- share as PDF / Word ---------- */
+const busy = on => document.getElementById("busy").classList.toggle("on", on);
+function letterName(ext){ return `موقف_الأسبوع_${letterWeek()}_${(S.info.course||"المادة").replace(/[\\/:*?"<>|]/g,"")}${S.info.group?"_شعبة_"+String(S.info.group).replace(/[\\/:*?"<>|]/g,""):""}_${S.info.study||""}.${ext}`; }
+async function shareLetter(){
+  const fmt=document.getElementById("shFmt").value;
+  busy(true);
+  try{
+    const blob = fmt==="pdf" ? await makePdf() : makeDocx();
+    await shareBlob(blob, letterName(fmt));
+  }catch(e){
+    console.error(e);
+    alert("تعذّر إنشاء الملف: "+(e&&e.message||e)+(fmt==="pdf" ? "\n\nيمكنك بدلاً من ذلك استخدام زر «طباعة / حفظ PDF»، أو المشاركة بصيغة وورد." : ""));
+  }
+  finally{ busy(false); }
+}
+async function shareBlob(blob, name){
+  if (APP){
+    const b64=await new Promise(r=>{const fr=new FileReader(); fr.onload=()=>r(String(fr.result).split(",")[1]); fr.readAsDataURL(blob);});
+    APP.shareFile(name, blob.type, b64); return;
+  }
+  // in a browser (phone, tablet or computer): the system share menu (WhatsApp, Telegram, mail...), opened
+  // from a fresh tap because browsers allow sharing only straight after the user touches a button
+  let file=new File([blob], name, {type:blob.type||"application/octet-stream"});
+  if (navigator.canShare){
+    if (!navigator.canShare({files:[file]}) && /json/.test(blob.type)){
+      // Chrome refuses to share .json files: send the same content as .txt, which the program also reads back
+      name=name.replace(/\.json$/i,"")+".txt"; blob=new Blob([blob],{type:"text/plain"});
+      file=new File([blob], name, {type:"text/plain"});
+    }
+    if (navigator.canShare({files:[file]})){ showShareBox(file, blob, name); return; }
+  }
+  downloadBlob(blob, name);
+  setTimeout(()=>alert(IS_MOBILE
+    ? `تم حفظ الملف باسم:\n${name}\n\nتجده في تطبيق «الملفات» ← التنزيلات. لإرساله افتح واتساب أو تيليغرام واضغط «إرفاق» ← مستند، واختر الملف.`
+    // on a computer, the Windows share window often lacks WhatsApp/Telegram, so save the file and say where it is
+    : `تم حفظ الملف في مجلد التنزيلات (Downloads) باسم:\n${name}\n\nلإرساله: افتح واتساب على الحاسبة (البرنامج أو web.whatsapp.com) أو تيليغرام أو البريد، ثم اضغط «إرفاق» واختر الملف من مجلد التنزيلات.`), 300);
+}
+const IS_MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+function downloadBlob(blob, name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+function showShareBox(file, blob, name){
+  const box=document.getElementById("shareBox");
+  document.getElementById("shareName").textContent=name;
+  box.classList.add("on");
+  document.getElementById("shareGo").onclick=async()=>{
+    try{ await navigator.share({files:[file], title:name}); box.classList.remove("on"); }
+    catch(e){ if (e.name!=="AbortError"){ downloadBlob(blob, name); box.classList.remove("on"); } }
+  };
+  document.getElementById("shareSave").onclick=()=>{ downloadBlob(blob, name); box.classList.remove("on"); };
+}
+/* PDF: the browser draws the letter itself (via SVG foreignObject, so Arabic shaping is exact),
+   the drawing is cut into A4 pages between rows/paragraphs, and each page goes into the PDF as a JPEG. */
+const PAGE={w:595.28,h:841.89,m:40};   // A4 in points, 40pt margins
+async function letterPages(){
+  const W=700, K=2.5;   // layout width in CSS px, and render scale for sharpness
+  const holder=document.createElement("div"); holder.id="letter"; holder.className="pdfsrc";   // #letter styles, full-page layout
+  holder.innerHTML=document.getElementById("letter").innerHTML;
+  holder.querySelectorAll("[contenteditable]").forEach(x=>x.removeAttribute("contenteditable"));
+  const fit=`width:${W}px;box-sizing:border-box;border:none;padding:0 6px;margin:0;max-width:none;font-size:17px;overflow:visible;background:#fff`;
+  holder.style.cssText=`position:absolute;left:-20000px;top:0;${fit}`;
+  document.body.appendChild(holder);
+  try{
+    if (document.fonts) await document.fonts.ready;
+    const H=Math.ceil(holder.scrollHeight)+24, top0=holder.getBoundingClientRect().top;
+    const cuts=[...holder.querySelectorAll("tr,p,.grp,.lh,.to,.subj,.sig,table")].map(e=>e.getBoundingClientRect().bottom-top0+2).sort((a,b)=>a-b);
+    holder.style.cssText=fit;
+    const css=[...document.querySelectorAll("style")].map(s=>s.textContent).join("\n");
+    const xhtml=new XMLSerializer().serializeToString(holder);
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject x="0" y="0" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" dir="rtl" lang="ar" style="background:#fff"><style><![CDATA[${css}]]></style>${xhtml}</div></foreignObject></svg>`;
+    const img=new Image(); img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+    await new Promise((ok,bad)=>{ if (img.complete && img.naturalWidth) ok(); else { img.onload=ok; img.onerror=()=>bad(new Error("تعذّر رسم الكتاب")); } });
+    const full=document.createElement("canvas"); full.width=W*K; full.height=H*K;
+    const g=full.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,full.width,full.height); g.scale(K,K); g.drawImage(img,0,0,W,H);
+    // Safari (iPhone) may leave out the signature pictures on the first draw: give them a moment and draw again
+    await new Promise(r=>setTimeout(r,250)); g.fillRect(0,0,W,H); g.drawImage(img,0,0,W,H);
+    // split into pages, preferring to cut just below a row or paragraph
+    const pageH=W*(PAGE.h-2*PAGE.m)/(PAGE.w-2*PAGE.m), pages=[];
+    for (let y=0; y<H-1; ){
+      let end=Math.min(H, y+pageH);
+      if (end<H){ const c=cuts.filter(v=>v>y+pageH*0.3 && v<=end).pop(); if (c) end=c; }
+      const pc=document.createElement("canvas"); pc.width=W*K; pc.height=Math.ceil((end-y)*K);
+      const pg=pc.getContext("2d"); pg.fillStyle="#fff"; pg.fillRect(0,0,pc.width,pc.height);
+      pg.drawImage(full,0,y*K,full.width,pc.height,0,0,pc.width,pc.height);
+      pages.push({jpg:Uint8Array.from(atob(pc.toDataURL("image/jpeg",0.92).split(",")[1]),ch=>ch.charCodeAt(0)), w:pc.width, h:pc.height, cssW:W, cssH:end-y});
+      y=end;
+    }
+    return pages;
+  } finally { holder.remove(); }
+}
+async function makePdf(){
+  const pages=await letterPages(), enc=new TextEncoder(), chunks=[], offs=[]; let len=0;
+  const put=d=>{ const b=typeof d==="string"?enc.encode(d):d; chunks.push(b); len+=b.length; };
+  const obj=(n,body)=>{ offs[n]=len; put(`${n} 0 obj\n`); body(); put("\nendobj\n"); };
+  put("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  const n=pages.length, kids=pages.map((_,i)=>`${3+i*3} 0 R`).join(" ");
+  obj(1,()=>put("<< /Type /Catalog /Pages 2 0 R >>"));
+  obj(2,()=>put(`<< /Type /Pages /Kids [${kids}] /Count ${n} >>`));
+  pages.forEach((p,i)=>{
+    const pn=3+i*3, cn=pn+1, im=pn+2, dw=PAGE.w-2*PAGE.m, dh=dw*p.cssH/p.cssW;
+    const cs=`q ${dw.toFixed(2)} 0 0 ${dh.toFixed(2)} ${PAGE.m} ${(PAGE.h-PAGE.m-dh).toFixed(2)} cm /Im0 Do Q`;
+    obj(pn,()=>put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE.w} ${PAGE.h}] /Resources << /XObject << /Im0 ${im} 0 R >> >> /Contents ${cn} 0 R >>`));
+    obj(cn,()=>put(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+    obj(im,()=>{ put(`<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpg.length} >>\nstream\n`); put(p.jpg); put("\nendstream"); });
+  });
+  const total=3+n*3, xref=len;
+  put(`xref\n0 ${total}\n0000000000 65535 f \n`+offs.slice(1).map(o=>pad(o,10)+" 00000 n \n").join(""));
+  put(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(chunks,{type:"application/pdf"});
+}
+
+/* minimal .docx writer: builds the Word XML from the letter as shown (including any edits) */
+function makeDocx(){
+  const L=document.getElementById("letter");
+  const x=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  // Latin-digit runs such as dates (11/10/2026) go in left-to-right runs, otherwise Word shows them reversed
+  const run1=(t,o,rtl)=>`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${o.b?"<w:b/><w:bCs/>":""}${o.u?'<w:u w:val="single"/>':""}<w:sz w:val="${o.sz||28}"/><w:szCs w:val="${o.sz||28}"/>${rtl?"<w:rtl/>":""}</w:rPr><w:t xml:space="preserve">${x(t)}</w:t></w:r>`;
+  // an RLM splits the text first, so "20‏/‏10‏/‏2026" stays right to left in Word as it is on screen
+  const run=(t,o={})=>String(t).split("‏").map(part=>part.split(/([0-9][0-9\/.:\-]*[0-9]|[0-9])/).map((s,k)=>s?run1(s,o,k%2===0):"").join("")).join("");
+  const para=(text,o={})=>{
+    const lines=String(text).split("\n");
+    return `<w:p><w:pPr><w:bidi/>${o.jc?`<w:jc w:val="${o.jc}"/>`:""}<w:spacing w:before="${o.before||0}" w:after="${nz(o.after,80)}"/>${o.bottom?'<w:pBdr><w:bottom w:val="single" w:sz="12" w:space="4" w:color="000000"/></w:pBdr>':""}</w:pPr>`+
+      lines.map((ln,k)=>(k?'<w:r><w:br/></w:r>':"")+run(ln,o)).join("")+`</w:p>`;
+  };
+  const noBorders='<w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders>';
+  const allBorders='<w:tblBorders>'+["top","left","bottom","right","insideH","insideV"].map(s=>`<w:${s} w:val="single" w:sz="6" w:color="000000"/>`).join("")+'</w:tblBorders>';
+  const cell=(content,w,shade)=>`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${shade?'<w:shd w:val="clear" w:color="auto" w:fill="EEEEEE"/>':""}<w:vAlign w:val="center"/></w:tcPr>${content||"<w:p/>"}</w:tc>`;
+  const table=(rows,borders,widths)=>`<w:tbl><w:tblPr><w:bidiVisual/><w:tblW w:w="5000" w:type="pct"/>${borders}<w:tblLayout w:type="autofit"/></w:tblPr><w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${rows}</w:tbl>`;
+  const txt=e=>e.innerText.replace(/ /g," ").trim();
+  const media=[]; let body="";   // signature images, one per signer that has one
+  const imgXml=(cx,cy,n)=>`<w:p><w:pPr><w:bidi/><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="sig${n}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${n}" name="sig${n}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdSig${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+  const walk=node=>{
+    for (const e of node.children){
+      if (e.classList.contains("lh")){
+        const [r,l]=e.children;
+        body+=table(`<w:tr>${cell(para(txt(r),{sz:26}),4500)}${cell(para(txt(l),{sz:26,jc:"center"}),4500)}</w:tr>`,noBorders,[4500,4500])+para("",{bottom:true,after:200});
+      } else if (e.classList.contains("sig")){
+        // attachments, then one block per signer (co-teachers, then the owner with the signature image)
+        const [att,...sgs]=e.children, cw=Math.floor(9000/(sgs.length+1));
+        const sgCells=sgs.map(sg=>{
+          let sgXml="";
+          for (const k of sg.children){
+            if (k.tagName==="IMG" && k.src.startsWith("data:image/png")){
+              media.push(k.src);   // about 1.8cm tall, at most 5cm wide (EMU: 360000 per cm)
+              const ratio=(k.naturalWidth||3)/(k.naturalHeight||1), w=Math.min(5*360000, 1.8*360000*ratio);
+              sgXml+=imgXml(Math.round(w), Math.round(w/ratio), media.length);
+            } else if (k.classList.contains("sp")) sgXml+=para("",{after:700});   // room to sign by hand
+            else sgXml+=para(txt(k),{jc:"center"});
+          }
+          return cell(sgXml,cw);
+        }).join("");
+        body+=para("",{after:300})+table(`<w:tr>${cell(para(txt(att)),cw)}${sgCells}</w:tr>`,noBorders,Array(sgs.length+1).fill(cw));
+      } else if (e.tagName==="TABLE"){
+        // column widths follow the on-screen table, scaled to the 9638-twip text width of A4 with 2cm margins
+        const px=[...e.rows[0].cells].map(c=>c.offsetWidth||1), sum=px.reduce((a,b)=>a+b,0), tw=px.map(p=>Math.round(9638*p/sum));
+        const rows=[...e.rows].map((tr,ri)=>`<w:tr>${ri?"":'<w:trPr><w:tblHeader/></w:trPr>'}`+[...tr.cells].map((td,ci)=>cell(para(txt(td),{sz:22,b:ri===0,jc:td.classList.contains("nm")?null:"center",after:0}),tw[ci]||1100,ri===0)).join("")+`</w:tr>`).join("");
+        body+=table(rows,allBorders,tw);
+      } else if (e.tagName==="DIV" && !e.className && e.children.length){
+        walk(e);
+      } else if (e.classList.contains("to")) body+=para(txt(e),{b:true,before:120});
+      else if (e.classList.contains("subj")) body+=para(txt(e),{b:true,u:true,jc:"center",before:120,after:160});
+      else if (e.classList.contains("grp")) body+=para(txt(e),{b:true,before:200});
+      else if (e.classList.contains("key-note")) body+=para(txt(e),{sz:20,before:60});
+      else if (txt(e)) body+=para(txt(e),{jc:e.style.textAlign==="center"?"center":"both",sz:e.style.fontSize?22:28});
+    }
+  };
+  walk(L);
+  const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/><w:bidi/></w:sectPr></w:body></w:document>`;
+  const files=[
+    ["[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`],
+    ["_rels/.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`],
+    ["word/_rels/document.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${media.map((_,j)=>`<Relationship Id="rIdSig${j+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/sig${j+1}.png"/>`).join("")}</Relationships>`],
+    ["word/document.xml",doc]
+  ];
+  media.forEach((m,j)=>files.push([`word/media/sig${j+1}.png`, Uint8Array.from(atob(m.split(",")[1]),c=>c.charCodeAt(0))]));
+  return new Blob([zipStore(files)],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+}
+/* stored (uncompressed) zip: enough for a .docx */
+function zipStore(files){
+  const enc=new TextEncoder(), crcT=new Uint32Array(256).map((_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;return c>>>0;});
+  const crc=d=>{let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=crcT[(c^d[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;};
+  const parts=[], central=[]; let off=0;
+  const le=(n,b)=>{const a=new Uint8Array(b);for(let i=0;i<b;i++)a[i]=(n>>>(8*i))&255;return a;};
+  const cat=arr=>{const n=arr.reduce((s,a)=>s+a.length,0),o=new Uint8Array(n);let p=0;arr.forEach(a=>{o.set(a,p);p+=a.length;});return o;};
+  for (const [name,content] of files){
+    const nm=enc.encode(name), data=typeof content==="string"?enc.encode(content):content, c=crc(data);
+    const common=[le(20,2),le(0x0800,2),le(0,2),le(0,2),le(0x21,2),le(c,4),le(data.length,4),le(data.length,4),le(nm.length,2),le(0,2)];
+    const local=cat([le(0x04034b50,4),...common,nm,data]);
+    central.push(cat([le(0x02014b50,4),le(20,2),...common,le(0,2),le(0,2),le(0,2),le(0,4),le(off,4),nm]));
+    parts.push(local); off+=local.length;
+  }
+  const cd=cat(central);
+  return cat([...parts,cd,le(0x06054b50,4),le(0,2),le(0,2),le(files.length,2),le(files.length,2),le(cd.length,4),le(off,4),le(0,2)]);
+}
+
+function renderAll(){ renderSections(); renderHead();renderHeader(); renderSig(); renderSched(); renderStudents(); renderAtt(); renderStatus(); renderLetter(); }
+save();   // writes the migrated layout right away
+fillInputs();
+renderAll();
+
+// opened from a link (not the Android app, not a file on disk): work offline and keep data from being cleared
+if (!APP && /^https?:$/.test(location.protocol)){
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+  // opened from Android's Share menu: the offline worker kept the shared file for us; import it now
+  if (/[?&]received=1/.test(location.search) && window.caches){
+    history.replaceState(null, "", location.pathname);
+    caches.open("bologna-inbox").then(async box=>{
+      const res=await box.match("./inbox-file");
+      const note=await box.match("./inbox-note");
+      if (!res && note){ const t=await note.text(); await box.delete("./inbox-note"); setTimeout(()=>handleImportText(t), 300); return; }
+      if (!res){
+        alert("فُتح البرنامج من قائمة المشاركة لكن الملف لم يصل إليه.\n\nاحذف أيقونة البرنامج من الشاشة الرئيسية، ثم افتح الرابط في Chrome وثبّته من جديد (القائمة ⋮ ← تثبيت التطبيق)، وأعد المحاولة.\nأو احفظ الملف واضغط «فتح ملف مستلم».");
+        return;
+      }
+      const text=await res.text(); await box.delete("./inbox-file");
+      setTimeout(()=>handleImportText(text), 300);
+    }).catch(()=>{});
+  }
+}
+</script>
+</body>
+</html>
