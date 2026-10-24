@@ -1,6 +1,6 @@
 ﻿// Offline support: keeps a copy of the app on the device. The page is fetched fresh when online
 // (so updates arrive), and the saved copy is used when there is no internet.
-const CACHE = "bologna-202610242313";
+const CACHE = "bologna-202610242317";
 const INBOX = "bologna-inbox";   // a file shared into the app from WhatsApp etc. waits here for the page
 const FILES = ["./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png"];
@@ -41,8 +41,9 @@ self.addEventListener("fetch", e => {
     return;
   }
   if (req.method !== "GET" || url.origin !== location.origin) return;
+  // cache:"no-cache" asks the server every time, so the browser's own 10-minute copy never hides an update
   e.respondWith(
-    fetch(req).then(res => {
+    fetch(req, { cache: "no-cache" }).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;
     }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match("./index.html")))
