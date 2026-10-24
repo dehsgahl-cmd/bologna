@@ -323,7 +323,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:6px 10px 18
         <option value="-1">جميع الطلبة</option>
         <option value="ch">تغيّر موقفهم ولم يُرفع بهم موقف</option>
         <option value="1">تنبيه</option><option value="3">إنذار نهائي</option>
-        <option value="4">راسب بالغياب</option><option value="5">راسب بالغياب رغم العذر</option>
+        <option value="4">راسب بالغياب بدون عذر</option><option value="5">راسب بالغياب بعذر</option>
         <option value="exc">لديهم عذر مقبول من مجلس الكلية</option>
       </select>
     </div>
@@ -367,7 +367,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:6px 10px 18
 /* Bologna (دليل اعتماد عملية بولونيا 2025-2026، الفصل الرابع، ثانياً): warning at 7%, final warning at 14%
    without excuse, fail by absence above 14%, or above 21% when the college council accepts an excuse.
    Level 2 (the annual system's first warning) does not exist here and is never assigned. */
-const STATUS = ["منتظم","تنبيه","—","إنذار نهائي","راسب بالغياب","راسب بالغياب (رغم العذر)"];
+const STATUS = ["منتظم","تنبيه","—","إنذار نهائي","راسب بالغياب بدون عذر","راسب بالغياب بعذر"];
 const ACTION = ["","تنبيههم تنبيهاً تحريرياً وإلكترونياً","","إنذارهم إنذاراً نهائياً","ترسيبهم بالغياب في المادة ومطالبتهم بإعادة دراستها دواماً وامتحاناً، مع استمرارهم بدراسة بقية موادهم","ترسيبهم بالغياب في المادة ومطالبتهم بإعادة دراستها دواماً وامتحاناً، مع استمرارهم بدراسة بقية موادهم"];
 const APP_TAG = "iq-bologna";
 const DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
@@ -923,11 +923,11 @@ function renderLetter(){
   if(!rows.length) body=`<p style="text-align:center;color:#888">لا يوجد طلبة تغيّر موقفهم لغاية الأسبوع (${W}).</p>`;
   // the letter shows both failure kinds (4 = unexcused, 5 = excused) as one group "راسب بالغياب";
   // the calculation and the status tab still tell them apart
-  else for (const grp of [{lv:[1],head:ACTION[1],act:STATUS[1]}, {lv:[3],head:ACTION[3],act:STATUS[3]}, {lv:[4,5],head:ACTION[4],act:"راسب بالغياب"}]){
+  else for (const grp of [{lv:[1],head:ACTION[1],act:STATUS[1]}, {lv:[3],head:ACTION[3],act:STATUS[3]}, {lv:[4,5],head:ACTION[4]}]){
     const g=rows.filter(x=>grp.lv.includes(x.r.lvl)); if(!g.length) continue;
     body+=`<div class="grp">• الطلبة المطلوب ${grp.head}:</div>
       <table><tr><th>ت</th><th>اسم الطالب</th><th>ساعات الغياب</th><th>نسبة الغياب</th><th>ما يعادله</th><th>الإجراء المطلوب</th></tr>`+
-      g.map((x,k)=>`<tr><td>${k+1}</td><td class="nm">${esc(x.s.name)}${x.r.exc?` – ${esc(excTxt(x.s))}`:""}</td><td>${fmt(x.r.a)}</td><td>${fmt(x.r.p)}%</td><td>${weeksTxt(x.r.a)}</td><td>${grp.act}</td></tr>`).join("")+`</table>`;
+      g.map((x,k)=>`<tr><td>${k+1}</td><td class="nm">${esc(x.s.name)}</td><td>${fmt(x.r.a)}</td><td>${fmt(x.r.p)}%</td><td>${weeksTxt(x.r.a)}</td><td>${grp.act||STATUS[x.r.lvl]}</td></tr>`).join("")+`</table>`;
   }
   // 7% = one week in the guide, but a 15-week term makes a week 6.7%: say so, so 13.3% for two weeks reads right
   if (rows.length) body+=`<div class="key-note" contenteditable="true" style="font-size:13px;margin-top:8px">ملاحظة: حسب دليل اعتماد عملية بولونيا يعادل الأسبوع الدراسي الواحد 7% من الساعات المقررة، والأسبوعان 14%، والثلاثة أسابيع 21%، لذلك قد تظهر النسبة الفعلية أقل قليلاً من هذه الأرقام.</div>`;
