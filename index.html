@@ -182,7 +182,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:6px 10px 18
       (تنبيه، إنذار نهائي، رسوب بالغياب، مع رفع الحد إلى 21% لمن قبل مجلس الكلية عذره)
       وإعداد الموقف الأسبوعي وطلب إصدار الأمر الإداري، وفق تعليمات وزارة التعليم العالي والبحث العلمي.</div>
     <div class="own">حقوق البرنامج محفوظة لـ أ.د. ضياء مسلم عبد الامير</div>
-    <div style="color:var(--muted);font-size:13px">نسخة نظام بولونيا – الإصدار 1.3</div>
+    <div style="color:var(--muted);font-size:13px">نسخة نظام بولونيا – الإصدار 1.4</div>
     <button class="btn" style="margin-top:12px" onclick="document.getElementById('about').classList.remove('on')">إغلاق</button>
     <div style="margin-top:14px"><a href="#" id="headLink" style="font-size:12.5px;color:var(--muted)" onclick="toggleHeadMode();return false;">وضع رئيس القسم</a></div>
   </div>
@@ -246,7 +246,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:6px 10px 18
     <div class="note" style="margin-bottom:0"><b>مادة مشتركة؟</b> اترك خانة «التدريسي» فارغة لمحاضراتك، واكتب اسم زميلك في المحاضرات التي يدرّسها (مثلاً العملي).
       بعدها اضغط <b>«مشاركة الشعبة مع زميل»</b> في الأعلى وأرسل الملف له بواتساب أو تيليغرام. يكفي أن يفتح زميلك الملف ويختار تطبيق «غيابات الطلبة»، فتُضاف الشعبة أو تُحدَّث تلقائياً.
       وبعد أن يسجّل غيابات محاضراته يرسل لك ملفه بالطريقة نفسها، فتُدمج غياباته مع غياباتك.
-      ويظهر اسمه وتوقيعه في الكتاب الأسبوعي.</div>
+      ويظهر اسمه وتوقيعه في المطالعة الأسبوعية.</div>
   </div>
   <div class="grid">
     <div><label>الجامعة (اكتب الاسم فقط)</label><input data-i="univ" placeholder="مثال: الكوفة"></div>
@@ -264,7 +264,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:6px 10px 18
     <button class="btn sec sm" onclick="document.getElementById('sigFile').click()">اختيار صورة التوقيع</button>
     <button class="btn sec sm" id="sigDel" style="display:none" onclick="setSig('')">حذف الصورة</button>
     <input type="file" id="sigFile" accept="image/*" style="display:none" onchange="loadSig(this)">
-    <span style="font-size:12.5px;color:var(--muted)">صوّر توقيعك على ورقة بيضاء، وستظهر الصورة فوق اسمك في الكتاب.</span>
+    <span style="font-size:12.5px;color:var(--muted)">صوّر توقيعك على ورقة بيضاء، وستظهر الصورة فوق اسمك في المطالعة.</span>
   </div>
 
   <h3>نسب الغياب (من مجموع الساعات المقررة)</h3>
@@ -335,7 +335,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:6px 10px 18
 <section class="tab" id="t-letter">
   <div class="noprint">
     <h2>الموقف الأسبوعي — طلب إصدار أمر إداري</h2>
-    <div class="note">في نهاية كل أسبوع اختر رقم الأسبوع، فيظهر كتاب يضم <b>فقط الطلبة الذين تغيّر موقفهم</b> منذ آخر موقف مُرسل، مع تواريخ غيابهم. يمكنك تعديل أي نص في الكتاب بالنقر عليه. بعد الطباعة/الإرسال اضغط «تأكيد الإرسال» حتى لا يتكرر الطلبة في موقف الأسبوع القادم.</div>
+    <div class="note">في نهاية كل أسبوع اختر رقم الأسبوع، فتظهر مطالعة تضم <b>فقط الطلبة الذين تغيّر موقفهم</b> منذ آخر موقف مُرسل، مع تواريخ غيابهم. يمكنك تعديل أي نص في المطالعة بالنقر عليه. بعد الطباعة/الإرسال اضغط «تأكيد الإرسال» حتى لا يتكرر الطلبة في موقف الأسبوع القادم.</div>
     <div class="row">
       <div style="width:150px"><label>موقف لغاية الأسبوع</label><select id="lWeek" onchange="chosenWeek=+this.value;renderLetter()"></select></div>
       <div style="width:150px"><label>العدد</label><input id="lNo" oninput="renderLetter()"></div>
@@ -347,9 +347,9 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:6px 10px 18
       <button class="btn sec" onclick="copyLetter()">نسخ النص</button>
     </div>
     <div class="row" style="align-items:center">
-      <b>مشاركة الكتاب:</b>
+      <b>إرسال المطالعة:</b>
       <div style="width:150px"><select id="shFmt"><option value="pdf">PDF</option><option value="docx">وورد (Word)</option></select></div>
-      <button class="btn" style="background:#6a1b9a" onclick="shareLetter()">مشاركة / إرسال</button>
+      <button class="btn" style="background:#6a1b9a" onclick="shareLetter()">إرسال المطالعة إلى رئيس القسم</button>
     </div>
     <div class="row">
       <button class="btn" style="background:#2e7d32" onclick="confirmSent()">تأكيد الإرسال</button>
@@ -947,7 +947,7 @@ function renderLetter(){
   co.filter(n=>!coSig(n)).forEach(n=>miss.push(`توقيع ${n}: يصل تلقائياً عندما تستلم ملف الشعبة منه`));
   const warn=document.getElementById("sigWarn");
   warn.style.display = miss.length ? "" : "none";
-  warn.innerHTML = miss.length ? `<b>ينقص الكتاب على هذا الجهاز:</b><br>• ${miss.map(esc).join("<br>• ")}<br>
+  warn.innerHTML = miss.length ? `<b>تنقص المطالعة على هذا الجهاز:</b><br>• ${miss.map(esc).join("<br>• ")}<br>
     <span style="font-size:12.5px">${APP
       ? "ملاحظة: بيانات هذا التطبيق خاصة بهذا الموبايل. إذا كانت بياناتك وتواقيعك مسجّلة على الحاسبة: اضغط في نسخة الحاسبة «حفظ نسخة احتياطية»، ثم انقل الملف إلى الموبايل واضغط هنا «استرجاع نسخة»."
       : "ملاحظة: بيانات هذه النسخة خاصة بهذه الحاسبة. إذا كانت بياناتك وتواقيعك مسجّلة في تطبيق الموبايل: اضغط في التطبيق «حفظ نسخة احتياطية»، ثم انقل الملف إلى الحاسبة واضغط هنا «استرجاع نسخة»."}</span>` : "";
@@ -972,8 +972,8 @@ function renderLetter(){
 }
 function copyLetter(){
   const text=document.getElementById("letter").innerText;
-  if (APP) { APP.copy(text); alert("تم نسخ نص الكتاب"); return; }
-  navigator.clipboard.writeText(text).then(()=>alert("تم نسخ نص الكتاب"));
+  if (APP) { APP.copy(text); alert("تم نسخ نص المطالعة"); return; }
+  navigator.clipboard.writeText(text).then(()=>alert("تم نسخ نص المطالعة"));
 }
 function confirmSent(){
   const rows=letterRows(), W=letterWeek(); if(!rows.length){alert("لا يوجد طلبة في هذا الموقف.");return;}
@@ -1105,6 +1105,7 @@ function downloadBlob(blob, name){ const a=document.createElement("a"); a.href=U
 function showShareBox(file, blob, name){
   const box=document.getElementById("shareBox");
   document.getElementById("shareName").textContent=name;
+  document.getElementById("shareGo").textContent=/\.(pdf|docx)$/i.test(name) ? "إرسال المطالعة إلى رئيس القسم" : "مشاركة / إرسال";
   box.classList.add("on");
   document.getElementById("shareGo").onclick=async()=>{
     // the file alone: WhatsApp on Android drops a share that also carries a title or text
@@ -1133,7 +1134,7 @@ async function letterPages(){
     const xhtml=new XMLSerializer().serializeToString(holder);
     const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject x="0" y="0" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" dir="rtl" lang="ar" style="background:#fff"><style><![CDATA[${css}]]></style>${xhtml}</div></foreignObject></svg>`;
     const img=new Image(); img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
-    await new Promise((ok,bad)=>{ if (img.complete && img.naturalWidth) ok(); else { img.onload=ok; img.onerror=()=>bad(new Error("تعذّر رسم الكتاب")); } });
+    await new Promise((ok,bad)=>{ if (img.complete && img.naturalWidth) ok(); else { img.onload=ok; img.onerror=()=>bad(new Error("تعذّر رسم المطالعة")); } });
     const full=document.createElement("canvas"); full.width=W*K; full.height=H*K;
     const g=full.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,full.width,full.height); g.scale(K,K); g.drawImage(img,0,0,W,H);
     // Safari (iPhone) may leave out the signature pictures on the first draw: give them a moment and draw again
